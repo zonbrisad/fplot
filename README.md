@@ -1,11 +1,11 @@
 
 <div style="text-align: center">
 
-<h1>Title</h1>
+<h1>fplot</h1>
 
 </div>
 
-
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -37,6 +37,8 @@
 
 ## About
 
+Fplot is a program for visualizing streaming data from files in /proc
+and /sys. 
 
 ## Features
 

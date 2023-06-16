@@ -1,0 +1,312 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# ----------------------------------------------------------------------------
+#
+# Test of plotlib
+#
+# File:     p
+# Author:   Peter Malmberg  <peter.malmberg@gmail.com>
+# Org:      __ORGANISTATION__
+# Date:     2023-06-12
+# License:
+# Python:   >= 3.0
+#
+# ----------------------------------------------------------------------------
+import argparse
+import logging
+import os
+import sys  # We need sys so that we can pass argv to QApplication
+import traceback
+from dataclasses import dataclass
+from enum import Enum
+from random import randint
+from types import NoneType
+
+import pyqtgraph as pg
+from PyQt5 import QtCore, QtWidgets
+from pyqtgraph import PlotWidget, plot
+
+
+class App:
+    NAME = "fplot"
+    VERSION = "0.01"
+    DESCRIPTION = "Test of plotlib"
+    LICENSE = ""
+    COPYRIGHT = ""
+    AUTHOR = "Peter Malmberg"
+    EMAIL = "<peter.malmberg@gmail.com>"
+    ORG = "__ORGANISATION__"
+    HOME = ""
+    ICON = ""
+
+
+class Def:
+    DATAPOINTS = 1000
+    COLUMNS = 1
+    INTERVAL = 1000
+
+
+def get_val(file: str) -> float:
+    if os.path.isfile(file):
+        with open(file) as file_name:
+            data = file_name.read()
+            val = float(data)
+            logging.debug(f"{file} {val}")
+            return val
+
+
+def get_line_val(file_name: str, row: int, col: int) -> float:
+    if os.path.isfile(file_name):
+        with open(file_name) as file:
+            lines = file.readlines()
+        line = lines[row]
+        d = line.split(" ")
+        data = [x for x in d if x != '']  # Remove empty strings
+        logging.debug(data)
+        val = float(data[col-1])
+        logging.debug(f"{file_name} {val} {row} {col}")
+        return val
+
+
+dl = [
+    "/sys/class/hwmon/hwmon0/temp1_input",
+    "/sys/class/hwmon/hwmon1/temp1_input",
+    "/sys/class/hwmon/hwmon1/freq1_input",
+    "/sys/class/hwmon/hwmon3/temp1_input",
+    "/sys/class/hwmon/hwmon3/temp2_input",
+    "/sys/class/hwmon/hwmon3/temp3_input",
+    "/sys/class/hwmon/hwmon3/temp4_input",
+]
+
+
+class PlotType(Enum):
+    Normal = 0
+    RC = 1
+    RC_Str = 2
+    Exec = 3
+
+
+pen = pg.mkPen(color=(255, 0, 0))
+
+
+@dataclass
+class Plot():
+    type: PlotType = PlotType.Normal
+    cmd: str = ""
+    file_name: str = ""
+    datapoints: int = 1000
+    title: str = ""
+    divider: float = 1
+    row: int = 1
+    col: int = 1
+    row_name: str = ""
+
+    def __post_init__(self):
+        self.gw = pg.PlotWidget()
+        self.gw.setTitle(self.title)
+        self.x = list(range(self.datapoints))
+        self.y = [0 for _ in range(self.datapoints)]
+        self.line = self.gw.plot(self.x, self.y, pen=pen)
+        self.process = QtCore.QProcess()
+
+    def get_line_val(self, row: int, col: int) -> float:
+        if os.path.isfile(self.file_name):
+            with open(self.file_name) as file:
+                lines = file.readlines()
+            line = lines[row]
+            d = line.split(" ")
+            data = [x for x in d if x != '']  # Remove empty strings
+            logging.debug(data)
+            val = float(data[col-1])
+            logging.debug(f"{self.file_name} {val} {row} {col}")
+            return val
+  
+    def update(self):
+        if self.type == PlotType.Normal:
+            val = self.get_line_val(0, 1) / self.divider
+
+        if self.type == PlotType.RC or self.type == PlotType.RC_Str:
+            val = self.get_line_val(self.row, self.col) / self.divider
+
+        if self.type == PlotType.Exec:
+            logging.debug(self.cmd)
+            self.process.start(self.cmd)
+            self.process.waitForFinished()
+            data = self.process.readAll()
+            # lines = str(data, "utf-8").split("\n")
+            # columns = lines[self.row-1].split(" ")
+            columns = str(data, "utf-8").split("\n")[self.row-1].split(" ")
+            val = float(columns[self.col-1]) / self.divider
+
+        self.x = self.x[1:]
+        self.x.append(self.x[-1]+1)
+        self.y = self.y[1:]
+        self.y.append(val)
+        self.line.setData(self.x, self.y)
+
+
+class MainWindow(QtWidgets.QMainWindow):
+
+    def __init__(self, plots, args):
+        super(MainWindow, self).__init__()
+
+        self.plots = plots
+        self.setWindowTitle(App.NAME)
+        centralWidget = QtWidgets.QWidget(self)
+        self.setCentralWidget(centralWidget)
+        hbox = QtWidgets.QHBoxLayout(centralWidget)
+        hbox.setSpacing(0)
+        hbox.setContentsMargins(1, 1, 1, 1)
+
+        # self.graphWidget.setBackground('w')
+        vboxes = []
+        for i in range(args.columns):
+            vbox = QtWidgets.QVBoxLayout()
+            vbox.setSpacing(0)
+            hbox.addLayout(vbox)
+            vboxes.append(vbox)
+
+        for i, pl in enumerate(self.plots):
+            vboxes[i % args.columns].addWidget(pl.gw)
+
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(1000)
+        self.timer.timeout.connect(self.update_plot_data)
+        self.timer.start()
+
+    def update_plot_data(self):
+
+        for plot in self.plots:
+            plot.update()
+
+
+def get_pos_arg_str(lst, i, default) -> str:
+    if i < len(lst):
+        return lst[i]
+    else:
+        return default
+
+
+def get_pos_arg_float(lst, i, default) -> float:
+    if i < len(lst):
+        return float(lst[i])
+    else:
+        return default
+
+
+def get_pos_arg_int(lst, i, default) -> int:
+    if i < len(lst):
+        return int(lst[i])
+    else:
+        return default
+
+
+def main() -> None:
+    logging_format = "[%(levelname)s] %(lineno)d %(funcName)s() : %(message)s"
+
+    parser = argparse.ArgumentParser(
+        prog=App.NAME,
+        description=App.DESCRIPTION,
+        epilog="",
+        add_help=True)
+    parser.add_argument("--plot", action="append", default=[],
+                        help="Add another plot")
+    parser.add_argument("--plotrc", action="append", default=[],
+                        help="Add another plot row column")
+    parser.add_argument("--plotexec", action="append", default=[],
+                        help="Add another plot via external command")
+    parser.add_argument("--interval", action="store", default=1.0,
+                        help="Sampling interval")
+    parser.add_argument("--columns", action="store", default=Def.COLUMNS, 
+                        type=int, help="Set number of columns")
+    parser.add_argument("--datapoints", default=Def.DATAPOINTS, type=int,
+                        help="Set default nr of datapoints")
+    parser.add_argument("--interval", default=Def.INTERVAL, type=int,
+                        help="Set update interval (ms)")
+    parser.add_argument("--debug", action="store_true", default=False,
+                        help="Print debug messages")
+    parser.add_argument("--version", action="version",
+                        version=f"{App.NAME} {App.VERSION}",
+                        help="Print version information")
+    args = parser.parse_args()
+    #parser.print_help()
+    #print(args)
+
+    if args.debug:
+        logging.basicConfig(format=logging_format, level=logging.DEBUG)
+
+    app = QtWidgets.QApplication(sys.argv)
+    plots = []
+
+    for p in args.plot:
+        params = p.split(":")
+        file_name = get_pos_arg_str(params, 0, "")
+        divider = get_pos_arg_float(params, 1, 1)
+        dp = get_pos_arg_int(params, 2, args.datapoints)
+        pl = Plot(type=PlotType.Normal, file_name=file_name, title=file_name, divider=divider, datapoints=dp)
+        logging.debug(pl)
+        plots.append(pl)
+
+    for p in args.plotrc:
+        params = p.split(":")
+        file_name = get_pos_arg_str(params, 0, "")
+
+        try:
+            row = get_pos_arg_int(params, 1, 1)
+            title = f"{file_name}:{row}"
+            pt = PlotType.RC
+        except ValueError:
+            pt = PlotType.RC_Str
+            row_name = get_pos_arg_str(params, 1, "")
+            title = f"{file_name}:{row_name}"
+            with open(file_name) as file:
+                lines = [line for line in file]
+
+            for i, line in enumerate(lines):
+                if row_name in line:
+                    break
+            row = i+1
+            logging.debug(f"Row {row}")
+
+        col = get_pos_arg_int(params, 2, 1)
+
+        divider = get_pos_arg_float(params, 3, 1)
+        datapoints = get_pos_arg_int(params, 4, args.datapoints)
+
+        fplot = Plot(type=pt, file_name=file_name, title=title, divider=divider, datapoints=datapoints, row=row, col=col)
+
+        plots.append(fplot)
+        logging.debug(fplot)
+
+    for p in args.plotexec:
+        params = p.split(":")
+        cmd = get_pos_arg_str(params, 0, "")
+        row = get_pos_arg_int(params, 1, 1)
+        col = get_pos_arg_int(params, 2, 1)
+        divider = get_pos_arg_float(params, 3, 1)
+        datapoints = get_pos_arg_int(params, 4, args.datapoints)
+        title = f"{cmd} {row} {col}"
+        fplot = Plot(type=PlotType.Exec, cmd=cmd, title=title, divider=divider, datapoints=datapoints, row=row, col=col)
+        plots.append(fplot)
+        logging.debug(fplot)
+
+    main = MainWindow(plots, args)
+    main.show()
+    sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    try:
+        main()
+        sys.exit(0)
+    except KeyboardInterrupt as e:  # Ctrl-C
+        raise e
+    except SystemExit as e:         # sys.exit()
+        raise e
+    except Exception as e:
+        print('ERROR, UNEXPECTED EXCEPTION')
+        print(str(e))
+        traceback.print_exc()
+        os._exit(1)
+
+
