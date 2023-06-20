@@ -67,7 +67,8 @@ class PlotType(Enum):
     Exec = 3
 
 
-pen = pg.mkPen(color=(255, 0, 100), width=1)
+# pen = pg.mkPen(color=(255, 0, 100), width=1)
+pen = pg.mkPen(color="#ff00ff", width=1)
 
 
 @dataclass
@@ -222,13 +223,6 @@ class FPlot:
         self.line.setData(self.x, self.y)
 
 
-def get_param(conf, param, default):
-    if param in conf:
-        return conf[param]
-    else:
-        return default
-
-
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, plots, fpids, args):
         super(MainWindow, self).__init__()
@@ -303,6 +297,17 @@ class Params:
         # divider = get_pos_arg_float(params, 1, 1)
 
 
+class JConf:
+    def __init__(self, file):
+        with file as infile:
+            self.conf = json.load(infile)
+
+    def get_param(self, param, default):
+        if param in self.conf:
+            return self.conf[param]
+        return default
+
+
 def get_param(conf, param, default):
     if param in conf:
         return conf[param]
@@ -372,8 +377,6 @@ def main() -> None:
         help="Print version information",
     )
     args = parser.parse_args()
-    # parser.print_help()
-    # print(args)
 
     if args.debug:
         logging.basicConfig(format=logging_format, level=logging.DEBUG)
@@ -468,23 +471,23 @@ def main() -> None:
         with c as infile:
             conf = json.load(infile)
 
-        if args.title == "":
-            args.title = get_param(conf, "title", "")
+        # if args.title == "":
+        args.title = get_param(conf, "title", args.title)
 
-        if args.columns == 1:
-            args.columns = get_param(conf, "columns", 1)
+        args.columns = get_param(conf, "columns", args.columns)
+        args.datapoint = get_param(conf, "datapoints", args.datapoints)
 
         pl = conf["plots"]
         for p in pl:
             fplot = FPlot(
                 type=PlotType.Normal,
-                file_name=p["file"],
-                cmd=p["cmd"],
-                title=p["title"],
-                divider=p["divider"],
-                datapoints=p["datapoints"],
-                row=p["row"],
-                col=p["col"],
+                file_name=get_param(p, "file", ""),
+                cmd=get_param(p, "cmd", ""),
+                title=get_param(p, "title", ""),
+                divider=get_param(p, "divider", args.columns),
+                datapoints=get_param(p, "datapoints", args.datapoints),
+                row=get_param(p, "row", 1),
+                col=get_param(p, "col", 1),
                 average=get_param(p, "average", args.average),
             )
             logging.debug(fplot)
