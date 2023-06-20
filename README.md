@@ -37,8 +37,7 @@
 
 ## About
 
-Fplot is a program for visualizing streaming data from files in /proc
-and /sys. 
+Fplot is a program for visualizing streaming data from files in /proc and /sys. 
 
 ## Features
 
@@ -49,15 +48,15 @@ and /sys.
 
 ### Development
 
-
 ## Install
-
 
 ### Download
 
-
 ### Installation
 
+``` 
+>pip install pyqtgraph 
+```
 
 ### Configuration
 
@@ -71,6 +70,19 @@ and /sys.
 
 
 ## ToDo
+- Support gpio
+- Colors
+- guide lines in graphs
+- multiple plots in graphs
+- averaging
+- save/recover data
+- screenshot 
+- change to timestamps as x axis
+- arithmetic 
+- counting
+- integrating
+- finding min/max
+
 
 
 ## Links
