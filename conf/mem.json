@@ -1,0 +1,48 @@
+{
+    "title": "Memory",
+    "columns": 1,
+    "interval": 1000,
+    "datapoints": 1000,
+    "plots": [
+        {
+            "file": "/proc/meminfo",
+            "cmd": "",
+            "row": "MemFree",
+            "col": 2,
+            "title": "MemFree (MB)",
+            "divider": 1024,
+            "datapoints": 86400,
+            "interval": 1000
+        },
+        {
+            "file": "/proc/meminfo",
+            "cmd": "",
+            "row": "MemAvailable",
+            "col": 2,
+            "title": "MemAvailable (MB)",
+            "divider": 1024,
+            "datapoints": 86400,
+            "interval": 1000
+        },
+        {
+            "file": "/proc/meminfo",
+            "cmd": "",
+            "row": "Buffers",
+            "col": 2,
+            "title": "Buffers (MB)",
+            "divider": 1024,
+            "datapoints": 86400,
+            "interval": 1000
+        },
+        {
+            "file": "/proc/meminfo",
+            "cmd": "",
+            "row": "SwapFree",
+            "col": 2,
+            "title": "SwapFree (MB)",
+            "divider": 1024,
+            "datapoints": 86400,
+            "interval": 1000
+        }
+    ]
+}

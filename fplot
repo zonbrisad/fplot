@@ -471,11 +471,10 @@ def main() -> None:
         with c as infile:
             conf = json.load(infile)
 
-        # if args.title == "":
         args.title = get_param(conf, "title", args.title)
-
         args.columns = get_param(conf, "columns", args.columns)
-        args.datapoint = get_param(conf, "datapoints", args.datapoints)
+        # args.datapoint = get_param(conf, "datapoints", args.datapoints)
+        datapoints = get_param(conf, "datapoints", args.datapoints)
 
         pl = conf["plots"]
         for p in pl:
@@ -485,7 +484,7 @@ def main() -> None:
                 cmd=get_param(p, "cmd", ""),
                 title=get_param(p, "title", ""),
                 divider=get_param(p, "divider", args.columns),
-                datapoints=get_param(p, "datapoints", args.datapoints),
+                datapoints=get_param(p, "datapoints", datapoints),
                 row=get_param(p, "row", 1),
                 col=get_param(p, "col", 1),
                 average=get_param(p, "average", args.average),
