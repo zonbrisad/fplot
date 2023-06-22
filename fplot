@@ -20,12 +20,11 @@ import os
 import sys  # We need sys so that we can pass argv to QApplication
 import traceback
 from dataclasses import dataclass
-from enum import Enum
 import math
+from typing import Protocol
 
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtWidgets
-from pyqtgraph import PlotWidget
 
 
 class App:
@@ -51,6 +50,14 @@ class Def:
     INTERVAL = 1000
 
 
+class XPlot(Protocol):
+    def update(self) -> None:
+        pass
+
+    def get_plot(self) -> pg.PlotWidget:
+        pass
+
+
 def get_val(file: str) -> float:
     if os.path.isfile(file):
         with open(file) as file_name:
@@ -60,19 +67,55 @@ def get_val(file: str) -> float:
             return val
 
 
-class PlotType(Enum):
-    Normal = 0
-    RC = 1
-    RC_Str = 2
-    Exec = 3
-
-
 # pen = pg.mkPen(color=(255, 0, 100), width=1)
 pen = pg.mkPen(color="#ff00ff", width=1)
 
 
 @dataclass
-class FPid:
+class AvgFilter:
+    len: int = 10
+
+    def __post_init__(self):
+        self.data = []
+
+    def update(self, new_val: float) -> float:
+        self.data.append(new_val)
+        if len(self.data) > self.len:
+            self.data.pop(0)
+
+        return sum(self.data) / len(self.data)
+
+
+class SPlot:
+    def __init__(self, title="", datapoints=1000, divider=1, average=1):
+        self.title = title
+        self.datapoints = datapoints
+        self.divider = divider
+        self.average = average
+
+        self.filter = AvgFilter(self.average)
+
+        self.gw = pg.PlotWidget()
+        self.gw.setTitle(self.title)
+
+        self.x = list(range(self.datapoints))
+        self.y = [0 for _ in range(self.datapoints)]
+        self.line = self.gw.plot(self.x, self.y, pen=pen)
+
+    def update_plot(self, new_val):
+        val = self.filter.update(new_val)
+
+        self.x = self.x[1:]
+        self.x.append(self.x[-1] + 1)
+        self.y = self.y[1:]
+        self.y.append(val)
+        self.line.setData(self.x, self.y)
+
+    def get_plot(self) -> pg.PlotWidget:
+        return self.gw
+
+
+class PidPlot(SPlot):
     pid: int = 0
     first_run: bool = True
     utime: int = 0
@@ -81,17 +124,16 @@ class FPid:
     old_stime: int = 0
     start_time: int = 0
     old_start_time: int = 0
-    datapoints: int = App.DATAPOINTS
     clk_tck: int = 100
 
-    def __post_init__(self):
-        self.gw_utime = pg.PlotWidget()
-        self.gw_utime.setTitle(f"pid {self.pid}")
-        # self.gw_utime.setTitle(self.title)
-
-        self.x = list(range(self.datapoints))
-        self.y = [0 for _ in range(self.datapoints)]
-        self.line = self.gw_utime.plot(self.x, self.y, pen=pen)
+    def __init__(self, pid=0, datapoints=1000, title="", divider=1, average=1):
+        super().__init__(
+            title=f"pid {pid}",
+            datapoints=datapoints,
+            divider=divider,
+            average=average,
+        )
+        self.pid = pid
 
         process = QtCore.QProcess()
         process.start("getconf CLK_TCK")
@@ -99,9 +141,8 @@ class FPid:
         data = process.readAll()
         line = str(data, "utf-8")
         self.clk_tck = int(line)
-        # print(self.clk_tck)
 
-    def update(self):
+    def update(self) -> None:
         with open(f"/proc/{self.pid}/stat") as file:
             line = file.read()
 
@@ -128,56 +169,59 @@ class FPid:
         val = (self.utime + self.stime - self.old_utime - self.old_stime) * 100
         logging.debug(line_s)
 
-        self.x = self.x[1:]
-        self.x.append(self.x[-1] + 1)
-        self.y = self.y[1:]
-        self.y.append(val)
-        self.line.setData(self.x, self.y)
+        self.update_plot(val)
 
 
-@dataclass
-class AvgFilter:
-    len: int = 10
+class CPUPlot(SPlot):
+    def __init__(self, title="", datapoints=1000, divider=1, average=1):
+        super().__init__(
+            title=title, datapoints=datapoints, divider=divider, average=average
+        )
+        self.old_vals = self.get_data()
 
-    def __post_init__(self):
-        self.data = []
+    def get_data(self) -> list[int]:
+        with open("/proc/stat") as file:
+            line = file.readline().replace("\n", "").split(" ")
+        vals = [int(x) for i, x in enumerate(line) if i >= 2]
+        return vals
 
-    def update(self, new_val: float) -> float:
-        self.data.append(new_val)
-        if len(self.data) > self.len:
-            self.data.pop(0)
+    def update(self):
+        vals = self.get_data()
+        difs = [(x - self.old_vals[i]) for i, x in enumerate(vals)]
+        total = sum(difs)
+        usage = difs[0] + difs[2]
+        average = usage * 100 / total
+        self.old_vals = vals
+        self.update_plot(average)
 
-        return sum(self.data) / len(self.data)
 
+class FilePlot(SPlot):
+    def __init__(
+        self,
+        file_name="",
+        cmd="",
+        row="1",
+        col=0,
+        row_name="",
+        title="",
+        datapoints=1000,
+        divider=1,
+        average=1,
+    ):
+        super().__init__(
+            title=title, datapoints=datapoints, divider=divider, average=average
+        )
 
-@dataclass
-class FPlot:
-    type: PlotType = PlotType.Normal
-    cmd: str = ""
-    file_name: str = ""
-    datapoints: int = 1000
-    title: str = ""
-    divider: float = 1
-    row: str = "1"
-    col: int = 0
-    row_name: str = ""
-    average: int = 1
+        self.row = row
+        self.col = col
+        self.file_name = file_name
+        self.cmd = cmd
 
-    def __post_init__(self):
-        self.filter = AvgFilter(self.average)
-
-        self.gw = pg.PlotWidget()
-        self.gw.setTitle(self.title)
-
-        self.x = list(range(self.datapoints))
-        self.y = [0 for _ in range(self.datapoints)]
-        self.line = self.gw.plot(self.x, self.y, pen=pen)
         self.process = QtCore.QProcess()
 
         if self.row.isnumeric():
             self.row = int(self.row)
         else:
-            # title = f"{self.file_name}:{row_name}"
             with open(self.file_name) as file:
                 lines = [line for line in file]
 
@@ -214,23 +258,15 @@ class FPlot:
         else:
             new_val = self.get_line_val(self.row, self.col) / self.divider
 
-        val = self.filter.update(new_val)
-
-        self.x = self.x[1:]
-        self.x.append(self.x[-1] + 1)
-        self.y = self.y[1:]
-        self.y.append(val)
-        self.line.setData(self.x, self.y)
+        self.update_plot(new_val)
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, plots, fpids, args):
+    def __init__(self, plots: list[XPlot], args):
         super(MainWindow, self).__init__()
 
         self.plots = plots
-        self.fpids = fpids
         self.setWindowTitle(args.title)
-        # self.setWindowTitle(App.NAME)
         centralWidget = QtWidgets.QWidget(self)
         self.setCentralWidget(centralWidget)
         hbox = QtWidgets.QHBoxLayout(centralWidget)
@@ -245,12 +281,9 @@ class MainWindow(QtWidgets.QMainWindow):
             hbox.addLayout(vbox)
             vboxes.append(vbox)
 
-        per = math.ceil((len(self.plots) + len(self.fpids)) / args.columns)
+        per = math.ceil(len(self.plots) / args.columns)
         for i, pl in enumerate(self.plots):
-            vboxes[i // per].addWidget(pl.gw)
-
-        for i, fpid in enumerate(self.fpids):
-            vboxes[i // per].addWidget(fpid.gw_utime)
+            vboxes[i // per].addWidget(pl.get_plot())
 
         self.timer = QtCore.QTimer()
         self.timer.setInterval(1000)
@@ -260,9 +293,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def update_plot_data(self):
         for plot in self.plots:
             plot.update()
-
-        for fpid in self.fpids:
-            fpid.update()
 
 
 def get_pos_arg_str(lst, i, default) -> str:
@@ -338,6 +368,12 @@ def main() -> None:
         help="Add pid plot",
     )
     parser.add_argument(
+        "--cpu",
+        action="store_true",
+        default=[],
+        help="Add CPU usage plot",
+    )
+    parser.add_argument(
         "--columns",
         action="store",
         default=Def.COLUMNS,
@@ -384,14 +420,46 @@ def main() -> None:
     app = QtWidgets.QApplication(sys.argv)
     plots = []
 
+    # Handle plot setup files
+    for c in args.conf:
+        with c as infile:
+            conf = json.load(infile)
+
+        args.title = get_param(conf, "title", args.title)
+        args.columns = get_param(conf, "columns", args.columns)
+        datapoints = get_param(conf, "datapoints", args.datapoints)
+
+        pl = conf["plots"]
+        for p in pl:
+            if get_param(p, "file", "") == "cpu":
+                plot = CPUPlot(
+                    title=get_param(p, "title", ""),
+                    datapoints=get_param(p, "datapoints", datapoints),
+                    average=get_param(p, "average", args.average),
+                )
+                plots.append(plot)
+                continue
+
+            plot = FilePlot(
+                file_name=get_param(p, "file", ""),
+                cmd=get_param(p, "cmd", ""),
+                title=get_param(p, "title", ""),
+                divider=get_param(p, "divider", args.columns),
+                datapoints=get_param(p, "datapoints", datapoints),
+                row=get_param(p, "row", 1),
+                col=get_param(p, "col", 1),
+                average=get_param(p, "average", args.average),
+            )
+            logging.debug(plot)
+            plots.append(plot)
+
     for p in args.plot:
         params = p.split(":")
         file_name = get_pos_arg_str(params, 0, "")
         divider = get_pos_arg_float(params, 1, 1)
         dp = get_pos_arg_int(params, 2, args.datapoints)
         average = get_pos_arg_int(params, 3, args.average)
-        fplot = FPlot(
-            type=PlotType.Normal,
+        fplot = FilePlot(
             file_name=file_name,
             title=file_name,
             divider=divider,
@@ -410,9 +478,7 @@ def main() -> None:
         try:
             row = get_pos_arg_int(params, 1, 1)
             title = f"{file_name}:{row}"
-            pt = PlotType.RC
         except ValueError:
-            pt = PlotType.RC_Str
             row_name = get_pos_arg_str(params, 1, "")
             title = f"{file_name}:{row_name}"
             with open(file_name) as file:
@@ -429,8 +495,7 @@ def main() -> None:
         datapoints = get_pos_arg_int(params, 4, args.datapoints)
         average = get_pos_arg_int(params, 5, args.average)
 
-        fplot = FPlot(
-            type=pt,
+        fplot = FilePlot(
             file_name=file_name,
             title=title,
             divider=divider,
@@ -453,8 +518,7 @@ def main() -> None:
         average = get_pos_arg_int(params, 5, args.average)
 
         title = f"{cmd} {row} {col}"
-        fplot = FPlot(
-            type=PlotType.Exec,
+        fplot = FilePlot(
             cmd=cmd,
             title=title,
             divider=divider,
@@ -466,38 +530,17 @@ def main() -> None:
         plots.append(fplot)
         logging.debug(fplot)
 
-    # Handle plot setup files
-    for c in args.conf:
-        with c as infile:
-            conf = json.load(infile)
-
-        args.title = get_param(conf, "title", args.title)
-        args.columns = get_param(conf, "columns", args.columns)
-        # args.datapoint = get_param(conf, "datapoints", args.datapoints)
-        datapoints = get_param(conf, "datapoints", args.datapoints)
-
-        pl = conf["plots"]
-        for p in pl:
-            fplot = FPlot(
-                type=PlotType.Normal,
-                file_name=get_param(p, "file", ""),
-                cmd=get_param(p, "cmd", ""),
-                title=get_param(p, "title", ""),
-                divider=get_param(p, "divider", args.columns),
-                datapoints=get_param(p, "datapoints", datapoints),
-                row=get_param(p, "row", 1),
-                col=get_param(p, "col", 1),
-                average=get_param(p, "average", args.average),
-            )
-            logging.debug(fplot)
-            plots.append(fplot)
-
-    fpids = []
     for pid in args.pid:
-        fpid = FPid(pid=pid, datapoints=args.datapoints)
-        fpids.append(fpid)
+        fpid = PidPlot(pid=pid, datapoints=args.datapoints, average=args.average)
+        plots.append(fpid)
 
-    main = MainWindow(plots, fpids, args)
+    if args.cpu:
+        cpu_plot = CPUPlot(
+            title="CPU (%)", datapoints=args.datapoints, average=args.average
+        )
+        plots.append(cpu_plot)
+
+    main = MainWindow(plots, args)
     main.show()
     sys.exit(app.exec_())
 
