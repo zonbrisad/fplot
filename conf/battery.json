@@ -1,8 +1,8 @@
 {
     "title": "Battery monitor",
-    "columns": 1,
+    "columns": 2,
     "interval": 1000,
-    "datapoints": 3200,
+    "datapoints": 7200,
     "plots": [
         {
             "file": "/sys/class/power_supply/C1B6/voltage_now",
@@ -31,6 +31,26 @@
             "col": 1,
             "title": "Charge (mAH)", 
             "divider": 1000,
+						"average": 5, 
+            "interval": 1000
+        },
+        {
+            "file": "/sys/class/backlight/intel_backlight/brightness",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "Backlight", 
+            "divider": 1000,
+						"average": 5, 
+            "interval": 1000
+        },
+        {
+            "file": "/sys/class/backlight/acpi_video0/brightness",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "Backlight acpi", 
+            "divider": 1,
 						"average": 5, 
             "interval": 1000
         },

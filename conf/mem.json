@@ -2,7 +2,7 @@
     "title": "Memory",
     "columns": 1,
     "interval": 1000,
-    "datapoints": 86400,
+    "datapoints": 10000,
     "plots": [
         {
             "file": "/proc/meminfo",
@@ -10,9 +10,7 @@
             "row": "MemFree",
             "col": 2,
             "title": "MemFree (MB)",
-            "divider": 1024,
-            "datapoints": 86400,
-            "interval": 1000
+            "divider": 1024
         },
         {
             "file": "/proc/meminfo",
@@ -20,9 +18,7 @@
             "row": "MemAvailable",
             "col": 2,
             "title": "MemAvailable (MB)",
-            "divider": 1024,
-            "datapoints": 86400,
-            "interval": 1000
+            "divider": 1024
         },
         {
             "file": "/proc/meminfo",
@@ -30,9 +26,7 @@
             "row": "Buffers",
             "col": 2,
             "title": "Buffers (MB)",
-            "divider": 1024,
-            "datapoints": 86400,
-            "interval": 1000
+            "divider": 1024
         },
         {
             "file": "/proc/meminfo",
@@ -40,9 +34,7 @@
             "row": "SwapFree",
             "col": 2,
             "title": "SwapFree (MB)",
-            "divider": 1024,
-            "datapoints": 86400,
-            "interval": 1000
+            "divider": 1024
         },
         {
             "file": "cpu",
@@ -50,9 +42,7 @@
             "row": "1",
             "col": 2,
             "title": "CPU (%)",
-            "divider": 1,
-            "datapoints": 86400,
-            "interval": 1000
+            "divider": 1
         }
     ]
 }
