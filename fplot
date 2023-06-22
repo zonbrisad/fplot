@@ -420,6 +420,39 @@ def main() -> None:
     app = QtWidgets.QApplication(sys.argv)
     plots = []
 
+    # Handle plot setup files
+    for c in args.conf:
+        with c as infile:
+            conf = json.load(infile)
+
+        args.title = get_param(conf, "title", args.title)
+        args.columns = get_param(conf, "columns", args.columns)
+        datapoints = get_param(conf, "datapoints", args.datapoints)
+
+        pl = conf["plots"]
+        for p in pl:
+            if get_param(p, "file", "") == "cpu":
+                plot = CPUPlot(
+                    title=get_param(p, "title", ""),
+                    datapoints=get_param(p, "datapoints", datapoints),
+                    average=get_param(p, "average", args.average),
+                )
+                plots.append(plot)
+                continue
+
+            plot = FilePlot(
+                file_name=get_param(p, "file", ""),
+                cmd=get_param(p, "cmd", ""),
+                title=get_param(p, "title", ""),
+                divider=get_param(p, "divider", args.columns),
+                datapoints=get_param(p, "datapoints", datapoints),
+                row=get_param(p, "row", 1),
+                col=get_param(p, "col", 1),
+                average=get_param(p, "average", args.average),
+            )
+            logging.debug(plot)
+            plots.append(plot)
+
     for p in args.plot:
         params = p.split(":")
         file_name = get_pos_arg_str(params, 0, "")
@@ -497,37 +530,13 @@ def main() -> None:
         plots.append(fplot)
         logging.debug(fplot)
 
-    # Handle plot setup files
-    for c in args.conf:
-        with c as infile:
-            conf = json.load(infile)
-
-        args.title = get_param(conf, "title", args.title)
-        args.columns = get_param(conf, "columns", args.columns)
-        datapoints = get_param(conf, "datapoints", args.datapoints)
-
-        pl = conf["plots"]
-        for p in pl:
-            fplot = FilePlot(
-                file_name=get_param(p, "file", ""),
-                cmd=get_param(p, "cmd", ""),
-                title=get_param(p, "title", ""),
-                divider=get_param(p, "divider", args.columns),
-                datapoints=get_param(p, "datapoints", datapoints),
-                row=get_param(p, "row", 1),
-                col=get_param(p, "col", 1),
-                average=get_param(p, "average", args.average),
-            )
-            logging.debug(fplot)
-            plots.append(fplot)
-
     for pid in args.pid:
         fpid = PidPlot(pid=pid, datapoints=args.datapoints, average=args.average)
         plots.append(fpid)
 
     if args.cpu:
         cpu_plot = CPUPlot(
-            title="CPU", datapoints=args.datapoints, average=args.average
+            title="CPU (%)", datapoints=args.datapoints, average=args.average
         )
         plots.append(cpu_plot)
 
