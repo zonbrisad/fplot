@@ -9,38 +9,22 @@
             "cmd": "",
             "row": "1",
             "col": 1,
-            "title": "CPU temp 1 (C)",
+            "title": "CPU temp 1 (°C)",
             "unit": "°C",
-            "divider": 1000
+            "divider": 1000,
+            "average": 10
         },
         {
             "file": "/sys/class/hwmon/hwmon3/temp2_input",
             "cmd": "",
             "row": "1",
             "col": 1,
-            "title": "CPU temp 2 (C)",
+            "title": "CPU temp 2 (°C)",
             "unit": "°C",
-            "divider": 1000
+            "divider": 1000,
+            "average": 10
         },
-        {
-            "file": "/sys/class/hwmon/hwmon3/temp3_input",
-            "cmd": "",
-            "row": "1",
-            "col": 1,
-            "title": "CPU temp 3 (C)",
-            "unit": "°C",
-            "divider": 1000
-        },
-        {
-            "file": "/sys/class/hwmon/hwmon3/temp4_input",
-            "cmd": "",
-            "row": "1",
-            "col": 1,
-            "title": "CPU temp 4 (C)",
-            "unit": "°C",
-            "divider": 1000
-        },
-        {
+				{
             "file": "/sys/class/hwmon/hwmon1/freq1_input",
             "cmd": "",
             "row": "1",
@@ -50,32 +34,13 @@
             "divider": 1000000,
             "average": 10
         },
-        {
-            "file": "/sys/class/hwmon/hwmon3/temp1_input",
-            "cmd": "",
-            "row": "1",
-            "col": 1,
-            "title": "CPU temp 1 (C) filter",
-            "unit": "°C",
-            "divider": 1000,
-            "average": 10
-        },
-        {
-            "file": "/sys/class/hwmon/hwmon3/temp2_input",
-            "cmd": "",
-            "row": "1",
-            "col": 1,
-            "title": "CPU temp 2 (C) filter",
-            "unit": "°C",
-            "divider": 1000,
-            "average": 10
-        },
+
         {
             "file": "/sys/class/hwmon/hwmon3/temp3_input",
             "cmd": "",
             "row": "1",
             "col": 1,
-            "title": "CPU temp 3 (C) filter",
+            "title": "CPU temp 3 (°C)",
             "unit": "°C",
             "divider": 1000,
             "average": 10
@@ -85,7 +50,7 @@
             "cmd": "",
             "row": "1",
             "col": 1,
-            "title": "CPU temp 4 (C) filter",
+            "title": "CPU temp 4 (°C)",
             "unit": "°C",
             "divider": 1000,
             "average": 10

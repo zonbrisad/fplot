@@ -22,6 +22,7 @@ import traceback
 from dataclasses import dataclass
 import math
 from typing import Protocol
+from PyQt5.QtGui import QTextDocument
 
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtWidgets
@@ -86,9 +87,23 @@ class AvgFilter:
         return sum(self.data) / len(self.data)
 
 
+css = """
+h5 {
+    color: red;
+    background-color: black;
+}
+
+background-color: black;
+color: green;
+font-size: 30px;
+font-family:Monospace;
+"""
+
+
 class SPlot:
-    def __init__(self, title="", datapoints=1000, divider=1, average=1):
+    def __init__(self, title="", unit="", datapoints=1000, divider=1, average=1):
         self.title = title
+        self.unit = unit
         self.datapoints = datapoints
         self.divider = divider
         self.average = average
@@ -97,6 +112,22 @@ class SPlot:
 
         self.gw = pg.PlotWidget()
         self.gw.setTitle(self.title)
+
+        # self.label = QtWidgets.QLabel()
+        self.label = QtWidgets.QTextEdit()
+        # self.label.setStyleSheet(css)
+        doc = QTextDocument()
+        doc.setDefaultStyleSheet(css)
+        self.label.setDocument(doc)
+        self.label.setText("    ")
+        self.label.setFrameStyle(0)
+        self.label.setMaximumWidth(100)
+
+        self.layout = QtWidgets.QHBoxLayout()
+        self.layout.setSpacing(0)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(self.gw)
+        self.layout.addWidget(self.label)
 
         self.x = list(range(self.datapoints))
         self.y = [0 for _ in range(self.datapoints)]
@@ -111,8 +142,13 @@ class SPlot:
         self.y.append(val)
         self.line.setData(self.x, self.y)
 
+        self.label.setText(f"<br>{val:<5.4}<br><h5>{self.unit}</h5")
+
     def get_plot(self) -> pg.PlotWidget:
         return self.gw
+
+    def get_layout(self):
+        return self.layout
 
 
 class PidPlot(SPlot):
@@ -203,12 +239,17 @@ class FilePlot(SPlot):
         col=0,
         row_name="",
         title="",
+        unit="",
         datapoints=1000,
         divider=1,
         average=1,
     ):
         super().__init__(
-            title=title, datapoints=datapoints, divider=divider, average=average
+            title=title,
+            unit=unit,
+            datapoints=datapoints,
+            divider=divider,
+            average=average,
         )
 
         self.row = row
@@ -266,23 +307,26 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.plots = plots
         self.setWindowTitle(args.title)
+        self.setStyleSheet(css)
         centralWidget = QtWidgets.QWidget(self)
         self.setCentralWidget(centralWidget)
         hbox = QtWidgets.QHBoxLayout(centralWidget)
         hbox.setSpacing(0)
-        hbox.setContentsMargins(1, 1, 1, 1)
+        hbox.setContentsMargins(0, 0, 0, 0)
 
         # self.graphWidget.setBackground('w')
         vboxes = []
         for i in range(args.columns):
             vbox = QtWidgets.QVBoxLayout()
+            vbox.setContentsMargins(0, 0, 0, 0)
             vbox.setSpacing(0)
             hbox.addLayout(vbox)
             vboxes.append(vbox)
 
         per = math.ceil(len(self.plots) / args.columns)
         for i, pl in enumerate(self.plots):
-            vboxes[i // per].addWidget(pl.get_plot())
+            # vboxes[i // per].addWidget(pl.get_plot())
+            vboxes[i // per].addLayout(pl.get_layout())
 
         self.timer = QtCore.QTimer()
         self.timer.setInterval(1000)
@@ -443,6 +487,7 @@ def main() -> None:
                 file_name=get_param(p, "file", ""),
                 cmd=get_param(p, "cmd", ""),
                 title=get_param(p, "title", ""),
+                unit=get_param(p, "unit", ""),
                 divider=get_param(p, "divider", args.columns),
                 datapoints=get_param(p, "datapoints", datapoints),
                 row=get_param(p, "row", 1),
