@@ -22,8 +22,14 @@ import traceback
 from dataclasses import dataclass
 import math
 from typing import Protocol
+try:
+    import pyqtgraph as pg
+except ModuleNotFoundError:
+    print("\nYou need library PyQtGraph to run this program.")
+    print("\nTo install:")
+    print(">pip install pyqtgraph\n")
+    exit(0)
 
-import pyqtgraph as pg
 from PyQt5 import QtCore, QtWidgets
 
 
