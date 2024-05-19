@@ -6,7 +6,6 @@
 #---------------------------------------------------------------------
 #
 
-
 #---------------------------------------------------------------------
 
 InitSettings() {
@@ -325,7 +324,7 @@ bpRmModule() { ##I Remove module
 # Internal variables
 #---------------------------------------------------------------------
 
-# Directory where script is located
+##V Directory where script is located
 BP_SELF_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 ##V Name of script
