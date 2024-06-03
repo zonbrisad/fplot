@@ -5,10 +5,12 @@
 #
 #---------------------------------------------------------------------
 #
-
 #---------------------------------------------------------------------
 
 InitSettings() {
+
+  BP_SELF_NAME=fplot_init
+
   MODULE="${BP_SELF_DIR}/${BP_SELF_NAME}"
 }
 
@@ -25,75 +27,9 @@ direct_exec() {
 }
 
 source_exec() {
-  bpLoadSettings
 
   # Add script path to global path
   bpAddToPath "${BP_SELF_DIR}"
-
-  # Add variable pointing to bashplate dir
-  export BP_PATH=${BP_SELF_DIR}
-
-  # Development mode
-  if [ -f "${BP_SELF_DIR}/DEV" ]; then
-    bpAddToPath "${BP_SELF_DIR}/dev"
-  fi
-
-  # Indicated that initscript was run
-  export BP_INIT_RUN=1
-
-}
-
-bpSettingsDir=~/.config/bashplates
-bpSettings=${bpSettingsDir}/bashplates.conf
-
-addSetting() {
-  echo "# ${3}" >>${bpSettings}
-  echo "${1}=\"${2}\"" >>${bpSettings}
-  echo >>${bpSettings}
-}
-
-createSettings() {
-
-  echo "Creating new bashplates settings file. ${bpSettings}"
-  mkdir -p ${bpSettingsDir}
-
-  echo "# " >>${bpSettings}
-  echo "# Bashplates common settings" >${bpSettings}
-  echo "# " >>${bpSettings}
-  echo >>${bpSettings}
-
-  addSetting "BP_NAME" "John Doe" "Name of user"
-  addSetting "BP_EMAIL" "JohnDoe@foo.bar" "Email of user"
-  addSetting "BP_EDITOR" "vi" "Default editor"
-  addSetting "BP_LICENSE" "MIT" "Default project license"
-  addSetting "BP_ORG" "ACME" "Default organisation"
-  addSetting "BP_DIFF" "meld" "Default diff program"
-}
-
-bpLoadSettings() {
-  if [ -n "${bpSettings}" ]; then
-    if [ -e ${bpSettings} ]; then
-      source ${bpSettings}
-    else
-      createSettings
-      source ${bpSettings}
-    fi
-  fi
-
-  export BP_NAME
-  export BP_EMAIL
-  export BP_EDITOR
-  export BP_LICENSE
-  export BP_ORG
-  export BP_PATH
-}
-
-_bp_completions() {
-  COMPREPLY=$(bp help)
-}
-
-_bpdev_completions() {
-  COMPREPLY=$(bpdev completion)
 }
 
 #---------------------------------------------------------------------
@@ -335,9 +271,6 @@ bpAddToPath() { ##I Add directory to global PATH
 
 ##V Directory where script is located
 BP_SELF_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-
-##V Name of script
-BP_SELF_NAME=fplot_init
 
 ##V Settings directory
 BP_CONFIG_DIR=~/.config/bashplates
