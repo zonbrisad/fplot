@@ -1,0 +1,104 @@
+{
+    "title": "CPU temperature CORE I7 4770K",
+    "columns": 2,
+    "interval": 1000,
+    "datapoints": 7200,
+    "plots": [
+        {
+            "file": "/sys/class/hwmon/hwmon3/temp1_input",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "CPU temp 1 (C)",
+            "unit": "°C",
+            "divider": 1000
+        },
+        {
+            "file": "/sys/class/hwmon/hwmon3/temp2_input",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "CPU temp 2 (C)",
+            "unit": "°C",
+            "divider": 1000
+        },
+        {
+            "file": "/sys/class/hwmon/hwmon3/temp3_input",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "CPU temp 3 (C)",
+            "unit": "°C",
+            "divider": 1000
+        },
+        {
+            "file": "/sys/class/hwmon/hwmon3/temp4_input",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "CPU temp 4 (C)",
+            "unit": "°C",
+            "divider": 1000
+        },
+        {
+            "file": "/sys/class/hwmon/hwmon1/freq1_input",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "Fan rpm",
+            "unit": "RPM",
+            "divider": 1000000,
+            "average": 10
+        },
+        {
+            "file": "/sys/class/hwmon/hwmon3/temp1_input",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "CPU temp 1 (C) filter",
+            "unit": "°C",
+            "divider": 1000,
+            "average": 10
+        },
+        {
+            "file": "/sys/class/hwmon/hwmon3/temp2_input",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "CPU temp 2 (C) filter",
+            "unit": "°C",
+            "divider": 1000,
+            "average": 10
+        },
+        {
+            "file": "/sys/class/hwmon/hwmon3/temp3_input",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "CPU temp 3 (C) filter",
+            "unit": "°C",
+            "divider": 1000,
+            "average": 10
+        },
+        {
+            "file": "/sys/class/hwmon/hwmon3/temp4_input",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "CPU temp 4 (C) filter",
+            "unit": "°C",
+            "divider": 1000,
+            "average": 10
+        },
+        {
+            "file": "/sys/class/hwmon/hwmon1/pwm1",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "Fan PWM",
+            "unit": "%",
+            "divider": 1,
+            "average": 10
+        }
+    ]
+}

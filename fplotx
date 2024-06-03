@@ -20,20 +20,11 @@ import os
 import sys  # We need sys so that we can pass argv to QApplication
 import traceback
 from dataclasses import dataclass
-from enum import Enum
-from random import randint
-#from types import NoneType
 import math
 from typing import Protocol
+from PyQt5.QtGui import QTextDocument
 
-try:
-    import pyqtgraph as pg
-except ModuleNotFoundError:
-    print("\nYou need library PyQtGraph to run this program.")
-    print("\nTo install:")
-    print(">pip install pyqtgraph\n")
-    exit(0)
-
+import pyqtgraph as pg
 from PyQt5 import QtCore, QtWidgets
 
 
@@ -79,7 +70,6 @@ def get_val(file: str) -> float:
 
 # pen = pg.mkPen(color=(255, 0, 100), width=1)
 pen = pg.mkPen(color="#ff00ff", width=1)
-pen2 = pg.mkPen(color="#4f004f", width=1)
 
 
 @dataclass
@@ -97,9 +87,23 @@ class AvgFilter:
         return sum(self.data) / len(self.data)
 
 
-class SPlot_old:
-    def __init__(self, title="", datapoints=1000, divider=1, average=1):
+css = """
+h5 {
+    color: red;
+    background-color: black;
+}
+
+background-color: black;
+color: green;
+font-size: 30px;
+font-family:Monospace;
+"""
+
+
+class SPlot:
+    def __init__(self, title="", unit="", datapoints=1000, divider=1, average=1):
         self.title = title
+        self.unit = unit
         self.datapoints = datapoints
         self.divider = divider
         self.average = average
@@ -108,6 +112,22 @@ class SPlot_old:
 
         self.gw = pg.PlotWidget()
         self.gw.setTitle(self.title)
+
+        # self.label = QtWidgets.QLabel()
+        self.label = QtWidgets.QTextEdit()
+        # self.label.setStyleSheet(css)
+        doc = QTextDocument()
+        doc.setDefaultStyleSheet(css)
+        self.label.setDocument(doc)
+        self.label.setText("    ")
+        self.label.setFrameStyle(0)
+        self.label.setMaximumWidth(100)
+
+        self.layout = QtWidgets.QHBoxLayout()
+        self.layout.setSpacing(0)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(self.gw)
+        self.layout.addWidget(self.label)
 
         self.x = list(range(self.datapoints))
         self.y = [0 for _ in range(self.datapoints)]
@@ -122,42 +142,13 @@ class SPlot_old:
         self.y.append(val)
         self.line.setData(self.x, self.y)
 
+        self.label.setText(f"<br>{val:<5.4}<br><h5>{self.unit}</h5")
+
     def get_plot(self) -> pg.PlotWidget:
         return self.gw
 
-
-class SimplePlot(pg.PlotWidget):
-    def __init__(self, parent=None, title="", datapoints=1000, average=1):
-        super().__init__(parent=parent, background="default", plotItem=None)
-        self.datapoints = datapoints
-        self.filter = AvgFilter(average)
-        self.setTitle(title)
-
-        self.x = list(range(self.datapoints))
-        self.y = [0 for _ in range(self.datapoints)]
-        self.line = self.plot(self.x, self.y, pen=pen)
-        self.line2 = self.plot(self.x, self.y, pen=pen2)
-
-        # self.setLabel("left", "aaa")
-        # self.setLabel("bottom", "bbb")
-
-    # def update(self):
-    #     self.update_plot(self.node.value)
-
-    def update_plot(self, new_val):
-        val = self.filter.update(new_val)
-
-        self.x = self.x[1:]
-        self.x.append(self.x[-1] + 1)
-        self.y = self.y[1:]
-        self.y.append(val)
-        self.line.setData(self.x, self.y)
-
-
-class SPlot(SimplePlot):
-    def __init__(self, parent=None, title="", datapoints=1000, average=1, divider=1):
-        super().__init__(parent, title, datapoints, average)
-        self.divider = divider
+    def get_layout(self):
+        return self.layout
 
 
 class PidPlot(SPlot):
@@ -197,11 +188,7 @@ class PidPlot(SPlot):
         self.old_stime = self.stime
         self.old_start_time = self.start_time
 
-        #
-        # /proc/<pid>/stat file information
-        #
-        # - https://www.baeldung.com/linux/total-process-cpu-usage
-        # - man 5 proc
+        # https://www.baeldung.com/linux/total-process-cpu-usage
 
         # scheduled user mode time in clock ticks
         self.utime = int(line_s[13]) / self.clk_tck
@@ -223,7 +210,7 @@ class PidPlot(SPlot):
 class CPUPlot(SPlot):
     def __init__(self, title="", datapoints=1000, divider=1, average=1):
         super().__init__(
-            title=title, datapoints=datapoints, average=average, divider=divider
+            title=title, datapoints=datapoints, divider=divider, average=average
         )
         self.old_vals = self.get_data()
 
@@ -252,12 +239,17 @@ class FilePlot(SPlot):
         col=0,
         row_name="",
         title="",
+        unit="",
         datapoints=1000,
         divider=1,
         average=1,
     ):
         super().__init__(
-            title=title, datapoints=datapoints, average=average, divider=divider
+            title=title,
+            unit=unit,
+            datapoints=datapoints,
+            divider=divider,
+            average=average,
         )
 
         self.row = row
@@ -315,23 +307,26 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.plots = plots
         self.setWindowTitle(args.title)
+        self.setStyleSheet(css)
         centralWidget = QtWidgets.QWidget(self)
         self.setCentralWidget(centralWidget)
         hbox = QtWidgets.QHBoxLayout(centralWidget)
         hbox.setSpacing(0)
-        hbox.setContentsMargins(1, 1, 1, 1)
+        hbox.setContentsMargins(0, 0, 0, 0)
 
         # self.graphWidget.setBackground('w')
         vboxes = []
         for i in range(args.columns):
             vbox = QtWidgets.QVBoxLayout()
+            vbox.setContentsMargins(0, 0, 0, 0)
             vbox.setSpacing(0)
             hbox.addLayout(vbox)
             vboxes.append(vbox)
 
         per = math.ceil(len(self.plots) / args.columns)
         for i, pl in enumerate(self.plots):
-            vboxes[i // per].addWidget(pl)
+            # vboxes[i // per].addWidget(pl.get_plot())
+            vboxes[i // per].addLayout(pl.get_layout())
 
         self.timer = QtCore.QTimer()
         self.timer.setInterval(1000)
@@ -416,12 +411,6 @@ def main() -> None:
         help="Add pid plot",
     )
     parser.add_argument(
-        "--process",
-        action="append",
-        default=[],
-        help="Add a process to monitor",
-    )
-    parser.add_argument(
         "--cpu",
         action="store_true",
         default=[],
@@ -498,6 +487,7 @@ def main() -> None:
                 file_name=get_param(p, "file", ""),
                 cmd=get_param(p, "cmd", ""),
                 title=get_param(p, "title", ""),
+                unit=get_param(p, "unit", ""),
                 divider=get_param(p, "divider", args.columns),
                 datapoints=get_param(p, "datapoints", datapoints),
                 row=get_param(p, "row", 1),
@@ -587,26 +577,6 @@ def main() -> None:
     for pid in args.pid:
         pid_plot = PidPlot(pid=pid, datapoints=args.datapoints, average=args.average)
         plots.append(pid_plot)
-
-    for proc in args.process:
-        # print(proc)
-        process = QtCore.QProcess()
-        process.start(proc)
-        # print(process.processId())
-        pid_plot = PidPlot(
-            pid=process.processId(), datapoints=args.datapoints, average=args.average
-        )
-        plots.append(pid_plot)
-        file_plot = FilePlot(
-            file_name=f"/proc/{process.processId()}/stat",
-            title="Memory usage",
-            divider=1024 * 1024,
-            # datapoints=datapoints,
-            row="1",
-            col=23,
-            # average=average,
-        )
-        plots.append(file_plot)
 
     if args.cpu:
         cpu_plot = CPUPlot(

@@ -1,0 +1,69 @@
+{
+    "title": "Battery monitor",
+    "columns": 2,
+    "interval": 1000,
+    "datapoints": 7200,
+    "plots": [
+        {
+            "file": "/sys/class/power_supply/C1B6/voltage_now",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "Battery voltage (V)", 
+            "divider": 1000000,
+						"average": 5, 
+            "interval": 1000
+        },
+        {
+            "file": "/sys/class/power_supply/C1B6/current_now",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "Curent (A)", 
+            "divider": 1000000,
+						"average": 5, 
+            "interval": 1000
+        },
+        {
+            "file": "/sys/class/power_supply/C1B6/charge_now",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "Charge (mAH)", 
+            "divider": 1000,
+						"average": 5, 
+            "interval": 1000
+        },
+        {
+            "file": "/sys/class/backlight/intel_backlight/brightness",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "Backlight", 
+            "divider": 1000,
+						"average": 5, 
+            "interval": 1000
+        },
+        {
+            "file": "/sys/class/backlight/acpi_video0/brightness",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "Backlight acpi", 
+            "divider": 1,
+						"average": 5, 
+            "interval": 1000
+        },
+        {
+            "file": "/sys/class/power_supply/C1B4/online",
+            "cmd": "",
+            "row": "1",
+            "col": 1,
+            "title": "Mains power supply", 
+            "divider": 1,
+						"average": 5, 
+            "interval": 1000
+        }
+
+    ]
+}

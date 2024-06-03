@@ -1,0 +1,176 @@
+{
+    "Title": "Window title",
+    "columns": 2,
+    "interval": 1000,
+    "datapoints": 1000,
+    "plots": [
+        {
+            "file": "",
+            "cmd": "grep  \"cpu MHz\" /proc/cpuinfo",
+            "row": "1",
+            "col": 4,
+            "title": "Thread 1 (MHz)",
+            "divider": 1,
+            "datapoints": 1000,
+            "interval": 1000
+        },
+        {
+            "file": "",
+            "cmd": "grep  \"cpu MHz\" /proc/cpuinfo",
+            "row": "2",
+            "col": 4,
+            "title": "Thread 2 (MHz)",
+            "divider": 1,
+            "datapoints": 1000,
+            "interval": 1000
+        },
+        {
+            "file": "",
+            "cmd": "grep  \"cpu MHz\" /proc/cpuinfo",
+            "row": "3",
+            "col": 4,
+            "title": "Thread 3 (MHz)",
+            "divider": 1,
+            "datapoints": 1000,
+            "interval": 1000
+        },
+        {
+            "file": "",
+            "cmd": "grep  \"cpu MHz\" /proc/cpuinfo",
+            "row": "4",
+            "col": 4,
+            "title": "Thread 4 (MHz)",
+            "divider": 1,
+            "datapoints": 1000,
+            "interval": 1000
+        },
+        {
+            "file": "",
+            "cmd": "grep  \"cpu MHz\" /proc/cpuinfo",
+            "row": "5",
+            "col": 4,
+            "title": "Thread 5 (MHz)",
+            "divider": 1,
+            "datapoints": 1000,
+            "interval": 1000
+        },
+        {
+            "file": "",
+            "cmd": "grep  \"cpu MHz\" /proc/cpuinfo",
+            "row": "6",
+            "col": 4,
+            "title": "Thread 6 (MHz)",
+            "divider": 1,
+            "datapoints": 1000,
+            "interval": 1000
+        },
+        {
+            "file": "",
+            "cmd": "grep  \"cpu MHz\" /proc/cpuinfo",
+            "row": "7",
+            "col": 4,
+            "title": "Thread 7 (MHz)",
+            "divider": 1,
+            "datapoints": 1000,
+            "interval": 1000
+        },
+        {
+            "file": "",
+            "cmd": "grep  \"cpu MHz\" /proc/cpuinfo",
+            "row": "8",
+            "col": 4,
+            "title": "Thread 8 (MHz)",
+            "divider": 1,
+            "datapoints": 1000,
+            "interval": 1000
+        },
+        {
+            "file": "",
+            "cmd": "grep  \"cpu MHz\" /proc/cpuinfo",
+            "row": "1",
+            "col": 4,
+            "title": "Thread 1 (MHz) filter",
+            "divider": 1,
+            "datapoints": 1000,
+            "interval": 1000,
+            "average": 10
+        },
+        {
+            "file": "",
+            "cmd": "grep  \"cpu MHz\" /proc/cpuinfo",
+            "row": "2",
+            "col": 4,
+            "title": "Thread 2 (MHz) filter",
+            "divider": 1,
+            "datapoints": 1000,
+            "interval": 1000,
+            "average": 10
+        },
+        {
+            "file": "",
+            "cmd": "grep  \"cpu MHz\" /proc/cpuinfo",
+            "row": "3",
+            "col": 4,
+            "title": "Thread 3 (MHz) filter",
+            "divider": 1,
+            "datapoints": 1000,
+            "interval": 1000,
+            "average": 10
+        },
+        {
+            "file": "",
+            "cmd": "grep  \"cpu MHz\" /proc/cpuinfo",
+            "row": "4",
+            "col": 4,
+            "title": "Thread 4 (MHz) filter",
+            "divider": 1,
+            "datapoints": 1000,
+            "interval": 1000,
+            "average": 10
+        },
+        {
+            "file": "",
+            "cmd": "grep  \"cpu MHz\" /proc/cpuinfo",
+            "row": "5",
+            "col": 4,
+            "title": "Thread 5 (MHz) filter",
+            "divider": 1,
+            "datapoints": 1000,
+            "interval": 1000,
+            "average": 10
+        },
+        {
+            "file": "",
+            "cmd": "grep  \"cpu MHz\" /proc/cpuinfo",
+            "row": "6",
+            "col": 4,
+            "title": "Thread 6 (MHz) filter",
+            "divider": 1,
+            "datapoints": 1000,
+            "interval": 1000,
+            "average": 10
+        },
+        {
+            "file": "",
+            "cmd": "grep  \"cpu MHz\" /proc/cpuinfo",
+            "row": "7",
+            "col": 4,
+            "title": "Thread 7 (MHz) filter",
+            "divider": 1,
+            "datapoints": 1000,
+            "interval": 1000,
+            "average": 10
+        },
+        {
+            "file": "",
+            "cmd": "grep  \"cpu MHz\" /proc/cpuinfo",
+            "row": "8",
+            "col": 4,
+            "title": "Thread 8 (MHz) filter",
+            "divider": 1,
+            "datapoints": 1000,
+            "interval": 1000,
+            "average": 10
+        }
+    ]
+}
