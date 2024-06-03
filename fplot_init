@@ -48,8 +48,8 @@ bpSettingsDir=~/.config/bashplates
 bpSettings=${bpSettingsDir}/bashplates.conf
 
 addSetting() {
-  echo "# "${3} >>${bpSettings}
-  echo ${1}"=\""${2}"\"" >>${bpSettings}
+  echo "# ${3}" >>${bpSettings}
+  echo "${1}=\"${2}\"" >>${bpSettings}
   echo >>${bpSettings}
 }
 
@@ -80,7 +80,7 @@ bpLoadSettings() {
       source ${bpSettings}
     fi
   fi
-	
+
   export BP_NAME
   export BP_EMAIL
   export BP_EDITOR
@@ -96,7 +96,6 @@ _bp_completions() {
 _bpdev_completions() {
   COMPREPLY=$(bpdev completion)
 }
-
 
 #---------------------------------------------------------------------
 
@@ -345,8 +344,7 @@ fi
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   BP_SELF_NAME=$(basename "$0")
-	direct_exec
+  direct_exec
 else
   source_exec
 fi
-
