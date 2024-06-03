@@ -28,15 +28,14 @@ source_exec() {
   bpLoadSettings
 
   # Add script path to global path
-  export PATH=${PATH}:${BP_SELF_DIR}
+  bpAddToPath "${BP_SELF_DIR}"
 
   # Add variable pointing to bashplate dir
   export BP_PATH=${BP_SELF_DIR}
 
   # Development mode
   if [ -f "${BP_SELF_DIR}/DEV" ]; then
-    export PATH=${PATH}:${BP_SELF_DIR}/dev
-    alias cdb='cd "${BP_SELF_DIR}"'
+    bpAddToPath "${BP_SELF_DIR}/dev"
   fi
 
   # Indicated that initscript was run
@@ -317,6 +316,17 @@ bpAddModule() { ##I Add init script to
 
 bpRmModule() { ##I Remove module
   bpRm "${BP_CONFIG_MODULES}/${1}"
+}
+
+#
+# $1 directory to add to PATH
+#
+bpAddToPath() { ##I Add directory to global PATH
+  NEW_PATH="$1"
+  if [[ ! $PATH == *"$NEW_PATH"* ]]; then
+    export PATH=${PATH}:${NEW_PATH}
+    #bpInfo "Adding path $NEW_PATH"
+  fi
 }
 
 #---------------------------------------------------------------------
