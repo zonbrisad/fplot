@@ -71,18 +71,20 @@ Fplot is a program for visualizing streaming data from files in /proc and /sys.
 
 ## ToDo
 - [ ] icon
-- Support gpio
-- Colors
-- guide lines in graphs
-- multiple plots in graphs
-- averaging
-- save/recover data
-- screenshot 
-- change to timestamps as x axis
-- arithmetic 
-- counting
-- integrating
-- finding min/max
+- [ ] Support gpio
+- [ ] Colors
+- [ ] guide lines in graphs
+- [ ] multiple plots in graphs
+- [ ] averaging
+- [ ] save/recover data
+- [ ] screenshot 
+- [ ] change to timestamps as x axis
+- [ ] arithmetics 
+- [ ] counting
+- [ ] integrating
+- [ ] finding min/max
+- [ ] Add: option to generate template config file
+- [ ] Add: Local directory for storage of userdefined config scripts ~/.config/fplot
 
 
 
