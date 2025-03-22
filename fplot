@@ -20,9 +20,6 @@ import os
 import sys  # We need sys so that we can pass argv to QApplication
 import traceback
 from dataclasses import dataclass
-from enum import Enum
-from random import randint
-#from types import NoneType
 import math
 from typing import Protocol
 
@@ -34,7 +31,7 @@ except ModuleNotFoundError:
     print(">pip install pyqtgraph\n")
     exit(0)
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt6 import QtCore, QtWidgets
 
 
 class App:
@@ -127,7 +124,9 @@ class SPlot_old:
 
 
 class SimplePlot(pg.PlotWidget):
-    def __init__(self, parent=None, title="", datapoints=1000, average=1):
+    def __init__(
+        self, parent=None, title: str = "", datapoints: int = 1000, average: int = 1
+    ):
         super().__init__(parent=parent, background="default", plotItem=None)
         self.datapoints = datapoints
         self.filter = AvgFilter(average)
@@ -155,7 +154,14 @@ class SimplePlot(pg.PlotWidget):
 
 
 class SPlot(SimplePlot):
-    def __init__(self, parent=None, title="", datapoints=1000, average=1, divider=1):
+    def __init__(
+        self,
+        parent=None,
+        title: str = "",
+        datapoints: int = 1000,
+        average: int = 1,
+        divider=1,
+    ):
         super().__init__(parent, title, datapoints, average)
         self.divider = divider
 
@@ -171,7 +177,9 @@ class PidPlot(SPlot):
     old_start_time: int = 0
     clk_tck: int = 100
 
-    def __init__(self, pid=0, datapoints=1000, title="", divider=1, average=1):
+    def __init__(
+        self, pid=0, datapoints: int = 1000, title: str = "", divider=1, average=1
+    ):
         super().__init__(
             title=f"pid {pid}",
             datapoints=datapoints,
@@ -221,7 +229,7 @@ class PidPlot(SPlot):
 
 
 class CPUPlot(SPlot):
-    def __init__(self, title="", datapoints=1000, divider=1, average=1):
+    def __init__(self, title: str = "", datapoints: int = 1000, divider=1, average=1):
         super().__init__(
             title=title, datapoints=datapoints, average=average, divider=divider
         )
@@ -246,13 +254,13 @@ class CPUPlot(SPlot):
 class FilePlot(SPlot):
     def __init__(
         self,
-        file_name="",
-        cmd="",
-        row="1",
-        col=0,
-        row_name="",
-        title="",
-        datapoints=1000,
+        file_name: str = "",
+        cmd: str = "",
+        row: str = "1",
+        col: int = 0,
+        row_name: str = "",
+        title: str = "",
+        datapoints: int = 1000,
         divider=1,
         average=1,
     ):
@@ -310,7 +318,7 @@ class FilePlot(SPlot):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, plots: list[XPlot], args):
+    def __init__(self, plots: list[XPlot], args: argparse.Namespace):
         super(MainWindow, self).__init__()
 
         self.plots = plots
@@ -322,7 +330,7 @@ class MainWindow(QtWidgets.QMainWindow):
         hbox.setContentsMargins(1, 1, 1, 1)
 
         # self.graphWidget.setBackground('w')
-        vboxes = []
+        vboxes: list[QtWidgets.QHBoxLayout] = []
         for i in range(args.columns):
             vbox = QtWidgets.QVBoxLayout()
             vbox.setSpacing(0)
@@ -343,21 +351,21 @@ class MainWindow(QtWidgets.QMainWindow):
             plot.update()
 
 
-def get_pos_arg_str(lst, i, default) -> str:
+def get_pos_arg_str(lst, i: int, default) -> str:
     if i < len(lst):
         return lst[i]
     else:
         return default
 
 
-def get_pos_arg_float(lst, i, default) -> float:
+def get_pos_arg_float(lst, i: int, default) -> float:
     if i < len(lst):
         return float(lst[i])
     else:
         return default
 
 
-def get_pos_arg_int(lst, i, default) -> int:
+def get_pos_arg_int(lst, i: int, default) -> int:
     if i < len(lst):
         return int(lst[i])
     else:
@@ -616,7 +624,7 @@ def main() -> None:
 
     main = MainWindow(plots, args)
     main.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":

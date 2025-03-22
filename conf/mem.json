@@ -2,7 +2,7 @@
     "title": "Memory",
     "columns": 1,
     "interval": 1000,
-    "datapoints": 10000,
+    "datapoints": 1000,
     "plots": [
         {
             "file": "/proc/meminfo",

@@ -6,13 +6,25 @@
     "configurations": [
         {
             "name": "Python: fplot 2 columns config file",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "fplot",
             "console": "integratedTerminal",
             "args": [
-                "--conf=fplot.json",
+                "--conf=conf/mem.json",
                 "--columns=2",
+                "--debug"
+            ],
+            "justMyCode": true
+        },
+        {
+            "name": "Python: fplot /proc/meminfo",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "fplot",
+            "console": "integratedTerminal",
+            "args": [
+                "--plotrc=/proc/meminfo:2:2",
                 "--debug"
             ],
             "justMyCode": true
