@@ -24,7 +24,7 @@
             "program": "fplot",
             "console": "integratedTerminal",
             "args": [
-                "--plotrc=/proc/meminfo:2:2",
+                "--plotrc=/proc/meminfo:2:2:1024",
                 "--debug"
             ],
             "justMyCode": true
