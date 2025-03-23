@@ -33,7 +33,9 @@ try:
 except ModuleNotFoundError:
     print("\nYou need library PyQtGraph to run this program.")
     print("\nTo install:")
-    print(">pip install pyqtgraph\n")
+    print(">apt install python3-pyqtgraph")
+    print("\nAlt:")
+    print(">pip install pyqtgraph")
     exit(0)
 
 from PyQt6 import QtCore, QtWidgets
@@ -50,10 +52,6 @@ class App:
     ORG = ""
     HOME = ""
     ICON = ""
-    # defaults
-    DATAPOINTS = 1000
-    COLUMNS = 1
-    INTERVAL = 1
 
 
 class Def:
@@ -63,6 +61,8 @@ class Def:
 
 
 class XPlot(Protocol):
+    """Plot interface"""
+
     def update(self) -> None:
         pass
 
@@ -117,7 +117,8 @@ class SimplePlot(pg.PlotWidget):
         self.x = list(range(self.datapoints))
         self.y = [0 for _ in range(self.datapoints)]
         self.line = self.plot(self.x, self.y, pen=pen)
-        self.line2 = self.plot(self.x, self.y, pen=pen2)
+
+        # self.line2 = self.plot(self.x, self.y, pen=pen2)
 
         # self.setLabel("left", "aaa")
         # self.setLabel("bottom", "bbb")
@@ -136,15 +137,7 @@ class SimplePlot(pg.PlotWidget):
 
 
 class PidPlot(SimplePlot):
-    #   pid: int = 0
-    # first_run: bool = True
-    # utime: int = 0
-    # stime: int = 0
-    # old_utime: int = 0
-    # old_stime: int = 0
-    # start_time: int = 0
-    # old_start_time: int = 0
-    # clk_tck: int = 100
+    """Plot CPU usage for a specific process"""
 
     def __init__(
         self, pid=0, datapoints: int = 1000, title: str = "", divider=1, average=1
@@ -210,6 +203,8 @@ class PidPlot(SimplePlot):
 
 
 class CPUPlot(SimplePlot):
+    """Plot CPU usage"""
+
     def __init__(self, title: str = "", datapoints: int = 1000, divider=1, average=1):
         super().__init__(
             title=title, datapoints=datapoints, average=average, divider=divider
@@ -233,6 +228,8 @@ class CPUPlot(SimplePlot):
 
 
 class FilePlot(SimplePlot):
+    """Plot data from a file"""
+
     def __init__(
         self,
         file_name: str = "",
@@ -282,7 +279,12 @@ class FilePlot(SimplePlot):
 
             # Remove empty strings
             columns = [column for column in columns if column != ""]
-            column = columns[col - 1]
+
+            try:
+                column = columns[col - 1]
+            except IndexError:
+                logging.error(f'Failed to get column {col} in line: "{line}" {columns}')
+                return 0
 
             try:
                 val = float(column) / self.divider
@@ -413,7 +415,9 @@ def get_param(conf, param, default):
 epilog = f"""
 Examples:\n
 
-> fplot --plot /proc/loadavg:1:1:1:1
+> fplot --plot /sys/class/hwmon/hwmon0/temp1_input:1000
+> fplot --plotrc /proc/meminfo:MemFree:2:1000:1
+> fplot --plotrc /proc/meminfo:2:2:1000
 """
 
 
