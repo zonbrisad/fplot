@@ -631,23 +631,23 @@ def main() -> None:
         pid_plot = PidPlot(pid=pid, datapoints=args.datapoints, average=args.average)
         plots.append(pid_plot)
 
-    for proc in args.process:
-        process = QtCore.QProcess()
-        process.start(proc)
-        pid_plot = PidPlot(
-            pid=process.processId(), datapoints=args.datapoints, average=args.average
-        )
-        plots.append(pid_plot)
-        file_plot = FilePlot(
-            file_name=f"/proc/{process.processId()}/stat",
-            title="Memory usage",
-            divider=1024 * 1024,
-            # datapoints=datapoints,
-            row="1",
-            col=23,
-            # average=average,
-        )
-        plots.append(file_plot)
+    # for proc in args.process:
+    #     process = QtCore.QProcess()
+    #     process.start(proc)
+    #     pid_plot = PidPlot(
+    #         pid=process.processId(), datapoints=args.datapoints, average=args.average
+    #     )
+    #     plots.append(pid_plot)
+    #     file_plot = FilePlot(
+    #         file_name=f"/proc/{process.processId()}/stat",
+    #         title="Memory usage",
+    #         divider=1024 * 1024,
+    #         # datapoints=datapoints,
+    #         row="1",
+    #         col=23,
+    #         # average=average,
+    #     )
+    #     plots.append(file_plot)
 
     if args.cpu:
         cpu_plot = CPUPlot(
