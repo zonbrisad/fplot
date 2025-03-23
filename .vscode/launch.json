@@ -18,7 +18,7 @@
             "justMyCode": true
         },
         {
-            "name": "Python: fplot /proc/meminfo",
+            "name": "Python: fplot plotrc meminfo",
             "type": "debugpy",
             "request": "launch",
             "program": "fplot",

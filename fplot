@@ -14,7 +14,6 @@
 # ----------------------------------------------------------------------------
 from argparse import (
     ArgumentParser,
-    RawTextHelpFormatter,
     FileType,
     Namespace,
     RawDescriptionHelpFormatter,
@@ -100,41 +99,18 @@ class AvgFilter:
         return sum(self.data) / len(self.data)
 
 
-# class SPlot_old:
-#     def __init__(self, title="", datapoints=1000, divider=1, average=1):
-#         self.title = title
-#         self.datapoints = datapoints
-#         self.divider = divider
-#         self.average = average
-
-#         self.filter = AvgFilter(self.average)
-
-#         self.gw = pg.PlotWidget()
-#         self.gw.setTitle(self.title)
-
-#         self.x = list(range(self.datapoints))
-#         self.y = [0 for _ in range(self.datapoints)]
-#         self.line = self.gw.plot(self.x, self.y, pen=pen)
-
-#     def update_plot(self, new_val):
-#         val = self.filter.update(new_val)
-
-#         self.x = self.x[1:]
-#         self.x.append(self.x[-1] + 1)
-#         self.y = self.y[1:]
-#         self.y.append(val)
-#         self.line.setData(self.x, self.y)
-
-#     def get_plot(self) -> pg.PlotWidget:
-#         return self.gw
-
-
 class SimplePlot(pg.PlotWidget):
     def __init__(
-        self, parent=None, title: str = "", datapoints: int = 1000, average: int = 1
+        self,
+        parent=None,
+        title: str = "",
+        datapoints: int = 1000,
+        average: int = 1,
+        divider: int = 1,
     ):
         super().__init__(parent=parent, background="default", plotItem=None)
         self.datapoints = datapoints
+        self.divider = divider
         self.filter = AvgFilter(average)
         self.setTitle(title)
 
@@ -159,29 +135,16 @@ class SimplePlot(pg.PlotWidget):
         self.line.setData(self.x, self.y)
 
 
-class SPlot(SimplePlot):
-    def __init__(
-        self,
-        parent=None,
-        title: str = "",
-        datapoints: int = 1000,
-        average: int = 1,
-        divider=1,
-    ):
-        super().__init__(parent, title, datapoints, average)
-        self.divider = divider
-
-
-class PidPlot(SPlot):
-    pid: int = 0
-    first_run: bool = True
-    utime: int = 0
-    stime: int = 0
-    old_utime: int = 0
-    old_stime: int = 0
-    start_time: int = 0
-    old_start_time: int = 0
-    clk_tck: int = 100
+class PidPlot(SimplePlot):
+    #   pid: int = 0
+    # first_run: bool = True
+    # utime: int = 0
+    # stime: int = 0
+    # old_utime: int = 0
+    # old_stime: int = 0
+    # start_time: int = 0
+    # old_start_time: int = 0
+    # clk_tck: int = 100
 
     def __init__(
         self, pid=0, datapoints: int = 1000, title: str = "", divider=1, average=1
@@ -193,13 +156,25 @@ class PidPlot(SPlot):
             average=average,
         )
         self.pid = pid
+        self.first_run: bool = True
+        self.utime: int = 0
+        self.stime: int = 0
+        self.old_utime: int = 0
+        self.old_stime: int = 0
+        self.start_time: int = 0
+        self.old_start_time: int = 0
+        self.clk_tck: int = 100
 
         process = QtCore.QProcess()
+        # process.setProcessChannelMode(QtCore.QProcess.ProcessChannelMode.MergedChannels)
         process.start("getconf CLK_TCK")
         process.waitForFinished()
         data = process.readAll()
         line = str(data, "utf-8")
-        self.clk_tck = int(line)
+        try:
+            self.clk_tck = int(line)
+        except ValueError:
+            logging.error(f'Failed to convert "{line}" to int')
 
     def update(self) -> None:
         with open(f"/proc/{self.pid}/stat") as file:
@@ -230,11 +205,11 @@ class PidPlot(SPlot):
             self.first_run = False
 
         val = (self.utime + self.stime - self.old_utime - self.old_stime) * 100
-        logging.debug(line_s)
+        # logging.debug(line_s)
         self.update_plot(val)
 
 
-class CPUPlot(SPlot):
+class CPUPlot(SimplePlot):
     def __init__(self, title: str = "", datapoints: int = 1000, divider=1, average=1):
         super().__init__(
             title=title, datapoints=datapoints, average=average, divider=divider
@@ -257,7 +232,7 @@ class CPUPlot(SPlot):
         self.update_plot(average)
 
 
-class FilePlot(SPlot):
+class FilePlot(SimplePlot):
     def __init__(
         self,
         file_name: str = "",
@@ -296,34 +271,59 @@ class FilePlot(SPlot):
             self.row = i + 1
 
     def get_line_val(self, row: int, col: int) -> float:
+        """Get value from a specific row and column in a file"""
+
         if os.path.isfile(self.file_name):
             with open(self.file_name) as file:
                 lines = file.readlines()
-            line = lines[row - 1]
-            d = line.split(" ")
-            data = [x for x in d if x != ""]  # Remove empty strings
-            logging.debug(data)
-            # print(f"{col} {self.col} {data}")
-            val = float(data[col - 1])
-            logging.debug(f"{self.file_name} {val} {row} {col}")
+            line = lines[row - 1].replace("\n", "")
+
+            columns = line.split(" ")
+
+            # Remove empty strings
+            columns = [column for column in columns if column != ""]
+            column = columns[col - 1]
+
+            try:
+                val = float(column) / self.divider
+                logging.debug(f"{self.file_name} {val} {row} {col}")
+            except ValueError:  # If value is not a number
+                logging.error(
+                    f'Failed to convert "{column}" to value, in line: "{line}"'
+                )
+                val = 0
+
             return val
 
     def update(self):
+        """Update plot with new value"""
+
         if self.cmd != "":
             self.process.start(self.cmd)
             self.process.waitForFinished()
             data = self.process.readAll()
 
             lines = str(data, "utf-8").split("\n")
-            columns = re.split(r" |\t", lines[self.row - 1])
-            columns_c = [x for x in columns if x != ""]
-            logging.debug(f"{self.col}  {self.row}")
-            logging.debug(f"{columns_c}")
-            new_val = float(columns_c[self.col - 1]) / self.divider
-        else:
-            new_val = self.get_line_val(self.row, self.col) / self.divider
+            line = lines[self.row - 1]
+            columns = re.split(r" |\t", line)
 
-        self.update_plot(new_val)
+            # remove empty strings
+            columns = [x for x in columns if x != ""]
+            column = columns[self.col - 1]
+
+            try:
+                val = float(column) / self.divider
+                logging.debug(f"Exec: {self.cmd}  {self.col} {self.row}")
+            except ValueError:
+                logging.error(
+                    f'Failed to convert "{column}" to value, in line: "{line}"'
+                )
+                val = 0
+
+        else:
+            val = self.get_line_val(self.row, self.col)
+
+        self.update_plot(val)
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -427,15 +427,22 @@ def main() -> None:
         add_help=True,
         formatter_class=RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--plot", action="append", default=[], help="Add another plot")
     parser.add_argument(
-        "--plotrc", action="append", default=[], help="Add another plot row column"
+        "--plot",
+        action="append",
+        default=[],
+        help="Add plot",
+        metavar="file:div:pts:avg",
+    )
+    parser.add_argument(
+        "--plotrc", action="append", default=[], help="Add plot row column"
     )
     parser.add_argument(
         "--plotexec",
         action="append",
         default=[],
-        help="Add another plot via external command",
+        help="Add plot via external command",
+        metavar="cmd:row:col:div:pts:avg",
     )
     parser.add_argument(
         "--pid",
@@ -443,12 +450,12 @@ def main() -> None:
         default=[],
         help="Add pid plot",
     )
-    parser.add_argument(
-        "--process",
-        action="append",
-        default=[],
-        help="Add a process to monitor",
-    )
+    # parser.add_argument(
+    #     "--process",
+    #     action="append",
+    #     default=[],
+    #     help="Add a process to monitor",
+    # )
     parser.add_argument(
         "--cpu",
         action="store_true",
@@ -467,6 +474,7 @@ def main() -> None:
         default=Def.DATAPOINTS,
         type=int,
         help="Set default nr of datapoints",
+        metavar="N",
     )
     parser.add_argument(
         "--average",
@@ -475,7 +483,11 @@ def main() -> None:
         help="Set moving average filter",
     )
     parser.add_argument(
-        "--interval", default=Def.INTERVAL, type=int, help="Set update interval (ms)"
+        "--interval",
+        default=Def.INTERVAL,
+        type=int,
+        help="Set update interval (ms)",
+        metavar="N",
     )
     parser.add_argument("--title", default="", type=str, help="Set window title")
     parser.add_argument(
@@ -484,6 +496,7 @@ def main() -> None:
         default=[],
         type=FileType("r"),
         help="Fplot config file",
+        metavar="FILE",
     )
     parser.add_argument(
         "--debug", action="store_true", default=False, help="Print debug messages"
@@ -498,6 +511,8 @@ def main() -> None:
 
     if args.debug:
         logging.basicConfig(format=logging_format, level=logging.DEBUG)
+    else:
+        logging.basicConfig(format=logging_format)
 
     app = QtWidgets.QApplication(sys.argv)
     plots = []
