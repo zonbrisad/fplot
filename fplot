@@ -79,9 +79,32 @@ def get_val(file: str) -> float:
             return val
 
 
+def rgb2str(r: int, g: int, b: int) -> str:
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+PaletteVSCodeL = [
+    rgb2str(0, 0, 0),
+    rgb2str(205, 49, 49),
+    rgb2str(13, 188, 121),
+    rgb2str(229, 229, 16),
+    rgb2str(36, 114, 200),
+    rgb2str(188, 63, 188),
+    rgb2str(17, 168, 205),
+    rgb2str(229, 229, 229),
+    rgb2str(102, 102, 102),
+    rgb2str(241, 76, 76),
+    rgb2str(35, 209, 139),
+    rgb2str(245, 245, 67),
+    rgb2str(59, 142, 234),
+    rgb2str(214, 112, 214),
+    rgb2str(41, 184, 219),
+    rgb2str(229, 229, 229),
+]
+
 # pen = pg.mkPen(color=(255, 0, 100), width=1)
 pen = pg.mkPen(color="#ff00ff", width=1)
-pen2 = pg.mkPen(color="#4f004f", width=1)
+pen = pg.mkPen(color=PaletteVSCodeL[9], width=1)
 
 
 @dataclass
@@ -353,7 +376,7 @@ class MainWindow(QtWidgets.QMainWindow):
             vboxes[i // per].addWidget(pl)
 
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(1000)
+        self.timer.setInterval(args.interval)
         self.timer.timeout.connect(self.update_plot_data)
         self.timer.start()
 
