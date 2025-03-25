@@ -687,6 +687,11 @@ def main() -> None:
         )
         plots.append(cpu_plot)
 
+    if len(plots) == 0:
+        # logging.error("No plots defined")
+        parser.print_help()
+        return 1
+
     main = MainWindow(plots, args)
     main.show()
     sys.exit(app.exec())
