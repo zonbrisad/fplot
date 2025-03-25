@@ -39,6 +39,10 @@ except ModuleNotFoundError:
     exit(0)
 
 from PyQt6 import QtCore, QtWidgets
+from PyQt6.QtGui import QIcon
+
+# Absolute path to script itself
+self_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
 
 
 class App:
@@ -51,7 +55,7 @@ class App:
     EMAIL = "<peter.malmberg@gmail.com>"
     ORG = ""
     HOME = ""
-    ICON = ""
+    ICON = f"{self_dir}/icon/fplot_128x128.png"
 
 
 class Def:
@@ -357,6 +361,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.plots = plots
         self.setWindowTitle(args.title)
+        self.setWindowIcon(QIcon(App.ICON))
         centralWidget = QtWidgets.QWidget(self)
         self.setCentralWidget(centralWidget)
         hbox = QtWidgets.QHBoxLayout(centralWidget)
