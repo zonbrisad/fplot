@@ -40,6 +40,7 @@ except ModuleNotFoundError:
 
 from PyQt6 import QtCore, QtWidgets
 from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QPushButton
 
 # Absolute path to script itself
 self_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
@@ -176,6 +177,7 @@ class PidPlot(SimplePlot):
             average=average,
         )
         self.pid = pid
+        self.pid_file = f"/proc/{self.pid}/stat"
         self.first_run: bool = True
         self.utime: int = 0
         self.stime: int = 0
@@ -197,7 +199,7 @@ class PidPlot(SimplePlot):
             logging.error(f'Failed to convert "{line}" to int')
 
     def update(self) -> None:
-        with open(f"/proc/{self.pid}/stat") as file:
+        with open(self.pid_file) as file:
             line = file.read()
 
         line_s = line.split(" ")
@@ -228,6 +230,9 @@ class PidPlot(SimplePlot):
         # logging.debug(line_s)
         self.update_plot(val)
 
+    def __str__(self) -> str:
+        return f"PidPlot {self.pid_file} {self.pid}"
+
 
 class CPUPlot(SimplePlot):
     """Plot CPU usage"""
@@ -252,6 +257,9 @@ class CPUPlot(SimplePlot):
         average = usage * 100 / total
         self.old_vals = vals
         self.update_plot(average)
+
+    def __str__(self) -> str:
+        return "CPUPlot"
 
 
 class FilePlot(SimplePlot):
@@ -323,6 +331,9 @@ class FilePlot(SimplePlot):
                 val = 0
 
             return val
+        else:
+            logging.error(f"File not found: {self.file_name}")
+            return 0
 
     def update(self):
         """Update plot with new value"""
@@ -354,8 +365,13 @@ class FilePlot(SimplePlot):
 
         self.update_plot(val)
 
+    def __str__(self) -> str:
+        return f"FilePlot {self.file_name} {self.row} {self.col}"
+
 
 class MainWindow(QtWidgets.QMainWindow):
+    """Main window for fplot"""
+
     def __init__(self, plots: list[XPlot], args: Namespace):
         super(MainWindow, self).__init__()
 
@@ -364,9 +380,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowIcon(QIcon(App.ICON))
         centralWidget = QtWidgets.QWidget(self)
         self.setCentralWidget(centralWidget)
-        hbox = QtWidgets.QHBoxLayout(centralWidget)
+        self.vbox = QtWidgets.QVBoxLayout(centralWidget)
+        self.vbox.setContentsMargins(1, 1, 1, 1)
+        # self.vbox.setContentsMargins(0, 0, 0, 0)
+
+        # hbox = QtWidgets.QHBoxLayout(centralWidget)
+        hbox = QtWidgets.QHBoxLayout()
         hbox.setSpacing(0)
         hbox.setContentsMargins(1, 1, 1, 1)
+        hbox.setContentsMargins(0, 0, 0, 0)
+        self.vbox.addLayout(hbox)
+
+        # button = QPushButton("Quit", self)
+        # self.vbox.addWidget(button)
 
         # self.graphWidget.setBackground('w')
         vboxes: list[QtWidgets.QHBoxLayout] = []
@@ -390,36 +416,42 @@ class MainWindow(QtWidgets.QMainWindow):
             plot.update()
 
 
-def get_pos_arg_str(lst, i: int, default) -> str:
-    if i < len(lst):
-        return lst[i]
-    else:
-        return default
+class ParamSpliter:
+    """Split parameters, and return default if not found"""
 
-
-def get_pos_arg_float(lst, i: int, default) -> float:
-    if i < len(lst):
-        return float(lst[i])
-    else:
-        return default
-
-
-def get_pos_arg_int(lst, i: int, default) -> int:
-    if i < len(lst):
-        return int(lst[i])
-    else:
-        return default
-
-
-class Params:
-    def __init__(self, param_string: str):
+    def __init__(self, param_string: str) -> None:
         self.params = param_string.split(":")
+        # print(self.params)
 
-    def get_str(self, i, default):
-        pass
-        # params = p.split(":")
-        # file_name = get_pos_arg_str(params, 0, "")
-        # divider = get_pos_arg_float(params, 1, 1)
+    def get_str(self, pos: int, default: str) -> str:
+        """Get string from position, return default if not found"""
+        if pos < len(self.params):
+            return self.params[pos]
+        else:
+            return default
+
+    def get_int(self, pos: int, default: int) -> int:
+        if pos < len(self.params):
+            if self.params == "":
+                return default
+            try:
+                return int(self.params[pos])
+            except ValueError:
+                return default
+        else:
+            return default
+
+    def get_float(self, pos: int, default: float) -> float:
+        if pos < len(self.params):
+            if self.params == "":
+                return default
+            try:
+                return float(self.params[pos])
+            except ValueError:
+                return default
+            # return float(self.params[pos])
+        else:
+            return default
 
 
 class JConf:
@@ -463,19 +495,24 @@ def main() -> None:
         "--plot",
         action="append",
         default=[],
-        help="Add plot",
-        metavar="file:div:pts:avg",
+        help="Add file plot",
+        # metavar="file:div:pts:avg",
+        metavar="FILE:DIV:PTS:AVG",
     )
     parser.add_argument(
-        "--plotrc", action="append", default=[], help="Add plot row column"
-    )
-    parser.add_argument(
-        "--plotexec",
+        "--plotrc",
         action="append",
         default=[],
-        help="Add plot via external command",
-        metavar="cmd:row:col:div:pts:avg",
+        help="Add file plot row column",
+        metavar="FILE:ROW:COL:DIV:PTS:AVG",
     )
+    # parser.add_argument(
+    #     "--plotexec",
+    #     action="append",
+    #     default=[],
+    #     help="Add plot via external command",
+    #     metavar="CMD:ROW:COL:DIV:PTS:AVG",
+    # )
     parser.add_argument(
         "--pid",
         action="append",
@@ -500,6 +537,7 @@ def main() -> None:
         default=Def.COLUMNS,
         type=int,
         help="Set number of columns",
+        metavar="N",
     )
     parser.add_argument(
         "--datapoints",
@@ -513,6 +551,7 @@ def main() -> None:
         default=1,
         type=int,
         help="Set moving average filter",
+        metavar="N",
     )
     parser.add_argument(
         "--interval",
@@ -547,7 +586,7 @@ def main() -> None:
         logging.basicConfig(format=logging_format)
 
     app = QtWidgets.QApplication(sys.argv)
-    plots = []
+    plot_list = []
 
     # Handle plot setup files
     for c in args.conf:
@@ -558,57 +597,56 @@ def main() -> None:
         args.columns = get_param(conf, "columns", args.columns)
         datapoints = get_param(conf, "datapoints", args.datapoints)
 
-        pl = conf["plots"]
-        for p in pl:
-            if get_param(p, "file", "") == "cpu":
+        for plotarg in conf["plots"]:
+            if get_param(plotarg, "file", "") == "cpu":
                 cpu_plot = CPUPlot(
-                    title=get_param(p, "title", ""),
-                    datapoints=get_param(p, "datapoints", datapoints),
-                    average=get_param(p, "average", args.average),
+                    title=get_param(plotarg, "title", ""),
+                    datapoints=get_param(plotarg, "datapoints", datapoints),
+                    average=get_param(plotarg, "average", args.average),
                 )
-                plots.append(cpu_plot)
+                plot_list.append(cpu_plot)
                 continue
 
             file_plot = FilePlot(
-                file_name=get_param(p, "file", ""),
-                cmd=get_param(p, "cmd", ""),
-                title=get_param(p, "title", ""),
-                divider=get_param(p, "divider", args.columns),
-                datapoints=get_param(p, "datapoints", datapoints),
-                row=get_param(p, "row", 1),
-                col=get_param(p, "col", 1),
-                average=get_param(p, "average", args.average),
+                file_name=get_param(plotarg, "file", ""),
+                cmd=get_param(plotarg, "cmd", ""),
+                title=get_param(plotarg, "title", ""),
+                divider=get_param(plotarg, "divider", args.columns),
+                datapoints=get_param(plotarg, "datapoints", datapoints),
+                row=get_param(plotarg, "row", 1),
+                col=get_param(plotarg, "col", 1),
+                average=get_param(plotarg, "average", args.average),
             )
             logging.debug(file_plot)
-            plots.append(file_plot)
+            plot_list.append(file_plot)
 
-    for p in args.plot:
-        params = p.split(":")
-        file_name = get_pos_arg_str(params, 0, "")
-        divider = get_pos_arg_float(params, 1, 1)
-        dp = get_pos_arg_int(params, 2, args.datapoints)
-        average = get_pos_arg_int(params, 3, args.average)
+    for plotarg in args.plot:
+        params = ParamSpliter(plotarg)
+        file_name = params.get_str(0, "")
+        divider = params.get_float(1, 1)
+        datapoints = params.get_int(2, args.datapoints)
+        average = params.get_int(3, args.average)
+
         file_plot = FilePlot(
             file_name=file_name,
             title=file_name,
             divider=divider,
-            datapoints=dp,
+            datapoints=datapoints,
             row="1",
             col=1,
             average=average,
         )
-        logging.debug(file_plot)
-        plots.append(file_plot)
+        plot_list.append(file_plot)
 
-    for p in args.plotrc:
-        params = p.split(":")
-        file_name = get_pos_arg_str(params, 0, "")
+    for plotarg in args.plotrc:
+        params = ParamSpliter(plotarg)
+        file_name = params.get_str(0, "")
 
         try:
-            row = get_pos_arg_int(params, 1, 1)
+            row = params.get_int(1, 1)
             title = f"{file_name}:{row}"
         except ValueError:
-            row_name = get_pos_arg_str(params, 1, "")
+            row_name = params.get_str(1, "")
             title = f"{file_name}:{row_name}"
             with open(file_name) as file:
                 lines = [line for line in file]
@@ -619,10 +657,33 @@ def main() -> None:
             row = i + 1
             logging.debug(f"Row {row}")
 
-        col = get_pos_arg_int(params, 2, 1)
-        divider = get_pos_arg_float(params, 3, 1)
-        datapoints = get_pos_arg_int(params, 4, args.datapoints)
-        average = get_pos_arg_int(params, 5, args.average)
+        col = params.get_int(2, 1)
+        divider = params.get_float(3, 1)
+        datapoints = params.get_int(4, args.datapoints)
+        average = params.get_int(5, args.average)
+
+        # params = plot.split(":")
+        # file_name = get_pos_arg_str(params, 0, "")
+
+        # try:
+        #     row = get_pos_arg_int(params, 1, 1)
+        #     title = f"{file_name}:{row}"
+        # except ValueError:
+        #     row_name = get_pos_arg_str(params, 1, "")
+        #     title = f"{file_name}:{row_name}"
+        #     with open(file_name) as file:
+        #         lines = [line for line in file]
+
+        #     for i, line in enumerate(lines):
+        #         if row_name in line:
+        #             break
+        #     row = i + 1
+        #     logging.debug(f"Row {row}")
+
+        # col = get_pos_arg_int(params, 2, 1)
+        # divider = get_pos_arg_float(params, 3, 1)
+        # datapoints = get_pos_arg_int(params, 4, args.datapoints)
+        # average = get_pos_arg_int(params, 5, args.average)
 
         file_plot = FilePlot(
             file_name=file_name,
@@ -634,34 +695,34 @@ def main() -> None:
             average=average,
         )
 
-        plots.append(file_plot)
+        plot_list.append(file_plot)
         logging.debug(file_plot)
 
-    for p in args.plotexec:
-        params = p.split(":")
-        cmd = get_pos_arg_str(params, 0, "")
-        row = get_pos_arg_int(params, 1, 1)
-        col = get_pos_arg_int(params, 2, 1)
-        divider = get_pos_arg_float(params, 3, 1)
-        datapoints = get_pos_arg_int(params, 4, args.datapoints)
-        average = get_pos_arg_int(params, 5, args.average)
+    # for plotarg in args.plotexec:
+    #     params = ParamSpliter(plotarg)
+    #     cmd = params.get_str(0, "")
+    #     row = params.get_int(1, 1)
+    #     col = params.get_int(2, 1)
+    #     divider = params.get_float(3, 1)
+    #     datapoints = params.get_int(4, args.datapoints)
+    #     average = params.get_int(5, args.average)
 
-        title = f"{cmd} {row} {col}"
-        file_plot = FilePlot(
-            cmd=cmd,
-            title=title,
-            divider=divider,
-            datapoints=datapoints,
-            row=row,
-            col=col,
-            average=average,
-        )
-        plots.append(file_plot)
-        logging.debug(file_plot)
+    #     title = f"{cmd} {row} {col}"
+    #     file_plot = FilePlot(
+    #         cmd=cmd,
+    #         title=title,
+    #         divider=divider,
+    #         datapoints=datapoints,
+    #         row=row,
+    #         col=col,
+    #         average=average,
+    #     )
+    #     plot_list.append(file_plot)
+    #     logging.debug(file_plot)
 
     for pid in args.pid:
         pid_plot = PidPlot(pid=pid, datapoints=args.datapoints, average=args.average)
-        plots.append(pid_plot)
+        plot_list.append(pid_plot)
 
     # for proc in args.process:
     #     process = QtCore.QProcess()
@@ -685,14 +746,17 @@ def main() -> None:
         cpu_plot = CPUPlot(
             title="CPU (%)", datapoints=args.datapoints, average=args.average
         )
-        plots.append(cpu_plot)
+        plot_list.append(cpu_plot)
 
-    if len(plots) == 0:
+    if len(plot_list) == 0:
         # logging.error("No plots defined")
         parser.print_help()
         return 1
 
-    main = MainWindow(plots, args)
+    for plotarg in plot_list:
+        logging.debug(plotarg)
+
+    main = MainWindow(plot_list, args)
     main.show()
     sys.exit(app.exec())
 

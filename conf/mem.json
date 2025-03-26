@@ -23,6 +23,14 @@
         {
             "file": "/proc/meminfo",
             "cmd": "",
+            "row": "Cached",
+            "col": 2,
+            "title": "Cached (MB)",
+            "divider": 1024
+        },
+        {
+            "file": "/proc/meminfo",
+            "cmd": "",
             "row": "Buffers",
             "col": 2,
             "title": "Buffers (MB)",
@@ -31,18 +39,10 @@
         {
             "file": "/proc/meminfo",
             "cmd": "",
-            "row": "SwapFree",
+            "row": "Active",
             "col": 2,
-            "title": "SwapFree (MB)",
+            "title": "Active (MB)",
             "divider": 1024
-        },
-        {
-            "file": "cpu",
-            "cmd": "",
-            "row": "1",
-            "col": 2,
-            "title": "CPU (%)",
-            "divider": 1
         }
     ]
 }
