@@ -41,15 +41,15 @@
 
 ## About
 
-Fplot is a program for easy realtime visualization of data from files in procfs and sysfs.
+Fplot is a program for quick and easy visualization of realtime data from files in procfs and sysfs.
 
 ## Features
 
 - Realtime graphical plots of data from files in procfs and sysfs.
 - Realtime plot of CPU load (--cpu)
-- Realtime plot of process cpu usage (--pid PID)
+- Realtime plot of process cpu usage (--pid)
 - Average function
-- Config file all
+- Config file
 
 ## Requirements
 

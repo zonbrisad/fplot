@@ -108,8 +108,9 @@ PaletteVSCodeL = [
 ]
 
 # pen = pg.mkPen(color=(255, 0, 100), width=1)
-pen = pg.mkPen(color="#ff00ff", width=1)
-pen = pg.mkPen(color=PaletteVSCodeL[9], width=1)
+plot_pen = pg.mkPen(color="#ff00ff", width=1)
+plot_pen = pg.mkPen(color=PaletteVSCodeL[9], width=1)
+axis_pen = pg.mkPen(color=PaletteVSCodeL[7], width=1)
 
 
 @dataclass
@@ -144,9 +145,14 @@ class SimplePlot(pg.PlotWidget):
 
         self.x = list(range(self.datapoints))
         self.y = [0 for _ in range(self.datapoints)]
-        self.line = self.plot(self.x, self.y, pen=pen)
+        self.line = self.plot(self.x, self.y, pen=plot_pen)
 
         # self.line2 = self.plot(self.x, self.y, pen=pen2)
+
+        self.getAxis("bottom").setPen(axis_pen)
+        self.getAxis("left").setPen(axis_pen)
+        # self.getAxis("right").setPen(plot_pen)
+        # self.getAxis("top").setPen(plot_pen)
 
         # self.setLabel("left", "aaa")
         # self.setLabel("bottom", "bbb")
@@ -381,8 +387,8 @@ class MainWindow(QtWidgets.QMainWindow):
         centralWidget = QtWidgets.QWidget(self)
         self.setCentralWidget(centralWidget)
         self.vbox = QtWidgets.QVBoxLayout(centralWidget)
-        self.vbox.setContentsMargins(1, 1, 1, 1)
-        # self.vbox.setContentsMargins(0, 0, 0, 0)
+        # self.vbox.setContentsMargins(1, 1, 1, 1)
+        self.vbox.setContentsMargins(0, 0, 0, 0)
 
         # hbox = QtWidgets.QHBoxLayout(centralWidget)
         hbox = QtWidgets.QHBoxLayout()
