@@ -27,6 +27,14 @@ import traceback
 from dataclasses import dataclass
 import math
 from typing import Protocol
+from multiprocessing import cpu_count
+import psutil
+
+
+from PyQt6 import QtCore, QtWidgets
+from PyQt6.QtGui import QIcon
+
+# from PyQt6.QtWidgets import QPushButton
 
 try:
     import pyqtgraph as pg
@@ -38,9 +46,7 @@ except ModuleNotFoundError:
     print(">pip install pyqtgraph")
     exit(0)
 
-from PyQt6 import QtCore, QtWidgets
-from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QPushButton
+# print(psutil.cpu_percent(interval=1, percpu=True))
 
 # Absolute path to script itself
 self_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
@@ -68,11 +74,11 @@ class Def:
 class XPlot(Protocol):
     """Plot interface"""
 
-    def update(self) -> None:
-        pass
+    def update(self) -> None: ...
 
-    def get_plot(self) -> pg.PlotWidget:
-        pass
+    #    def get_plot(self) -> pg.PlotWidget: ...
+
+    def xxx(self): ...
 
 
 def get_val(file: str) -> float:
@@ -136,8 +142,10 @@ class SimplePlot(pg.PlotWidget):
         datapoints: int = 1000,
         average: int = 1,
         divider: int = 1,
+        virtual: bool = False,
     ):
         super().__init__(parent=parent, background="default", plotItem=None)
+        self.virtual = virtual
         self.datapoints = datapoints
         self.divider = divider
         self.filter = AvgFilter(average)
@@ -157,9 +165,6 @@ class SimplePlot(pg.PlotWidget):
         # self.setLabel("left", "aaa")
         # self.setLabel("bottom", "bbb")
 
-    # def update(self):
-    #     self.update_plot(self.node.value)
-
     def update_plot(self, new_val):
         val = self.filter.update(new_val)
 
@@ -168,6 +173,39 @@ class SimplePlot(pg.PlotWidget):
         self.y = self.y[1:]
         self.y.append(val)
         self.line.setData(self.x, self.y)
+
+    def get_widgets(self) -> list[pg.PlotWidget]:
+        """Return plot widgets"""
+        return [self]
+
+
+class Plots:
+    def __init__(self):
+        self.plots: list[XPlot] = []
+
+    def add_plot(self, plot: XPlot) -> None:
+        self.plots.append(plot)
+
+    def update(self) -> None:
+        for plot in self.plots:
+            plot.update()
+
+    def get_widgets(self) -> list[pg.PlotWidget]:
+        """Return plot widgets"""
+        widgets = []
+        for plot in self.plots:
+            widgets.extend(plot.get_widgets())
+        return widgets
+
+    def __iter__(self):
+        self.index = 0
+        return self
+
+    def __next__(self) -> XPlot:
+        if self.index >= len(self.plots):
+            raise StopIteration
+        self.index += 1
+        return self.plots[self.index - 1]
 
 
 class PidPlot(SimplePlot):
@@ -243,26 +281,63 @@ class PidPlot(SimplePlot):
 class CPUPlot(SimplePlot):
     """Plot CPU usage"""
 
-    def __init__(self, title: str = "", datapoints: int = 1000, divider=1, average=1):
+    def __init__(
+        self,
+        title: str = "",
+        datapoints: int = 1000,
+        divider=1,
+        average=1,
+    ):
         super().__init__(
             title=title, datapoints=datapoints, average=average, divider=divider
         )
-        self.old_vals = self.get_data()
 
-    def get_data(self) -> list[int]:
-        with open("/proc/stat") as file:
-            line = file.readline().replace("\n", "").split(" ")
-        vals = [int(x) for i, x in enumerate(line) if i >= 2]
-        return vals
+    def update(self, value=None) -> None:
+        """Update plot with new value"""
 
-    def update(self):
-        vals = self.get_data()
-        difs = [(x - self.old_vals[i]) for i, x in enumerate(vals)]
-        total = sum(difs)
-        usage = difs[0] + difs[2]
-        average = usage * 100 / total
-        self.old_vals = vals
-        self.update_plot(average)
+        if value is None:
+            self.update_plot(psutil.cpu_percent(percpu=False))
+        else:
+            self.update_plot(value)
+
+    def __str__(self) -> str:
+        return "CPUPlot"
+
+
+class CPUPlotI:
+    """Plot CPU usage for each core"""
+
+    def __init__(
+        self,
+        datapoints: int = 1000,
+        divider=1,
+        average=1,
+    ):
+
+        self.plots = []
+        for x in range(psutil.cpu_count()):
+            self.plots.append(
+                CPUPlot(
+                    title=f"CPU{x} (%)",
+                    datapoints=datapoints,
+                    average=average,
+                    divider=divider,
+                )
+            )
+
+    def update(self) -> None:
+        """Update plot with new value"""
+        cpu_state = psutil.cpu_percent(percpu=True)
+
+        for i, plot in enumerate(self.plots):
+            plot.update(cpu_state[i])
+
+    def get_widgets(self) -> list[pg.PlotWidget]:
+        """Return plot widgets"""
+        plot_list = []
+        for plot in self.plots:
+            plot_list.extend(plot.get_widgets())
+        return plot_list
 
     def __str__(self) -> str:
         return "CPUPlot"
@@ -378,29 +453,27 @@ class FilePlot(SimplePlot):
 class MainWindow(QtWidgets.QMainWindow):
     """Main window for fplot"""
 
-    def __init__(self, plots: list[XPlot], args: Namespace):
+    def __init__(self, plotwidgets: Plots, args: Namespace):
         super(MainWindow, self).__init__()
 
-        self.plots = plots
+        self.plots = plotwidgets
         self.setWindowTitle(args.title)
         self.setWindowIcon(QIcon(App.ICON))
         centralWidget = QtWidgets.QWidget(self)
         self.setCentralWidget(centralWidget)
         self.vbox = QtWidgets.QVBoxLayout(centralWidget)
-        # self.vbox.setContentsMargins(1, 1, 1, 1)
         self.vbox.setContentsMargins(0, 0, 0, 0)
 
         # hbox = QtWidgets.QHBoxLayout(centralWidget)
         hbox = QtWidgets.QHBoxLayout()
         hbox.setSpacing(0)
-        hbox.setContentsMargins(1, 1, 1, 1)
         hbox.setContentsMargins(0, 0, 0, 0)
         self.vbox.addLayout(hbox)
 
         # button = QPushButton("Quit", self)
         # self.vbox.addWidget(button)
-
         # self.graphWidget.setBackground('w')
+
         vboxes: list[QtWidgets.QHBoxLayout] = []
         for i in range(args.columns):
             vbox = QtWidgets.QVBoxLayout()
@@ -408,9 +481,10 @@ class MainWindow(QtWidgets.QMainWindow):
             hbox.addLayout(vbox)
             vboxes.append(vbox)
 
-        per = math.ceil(len(self.plots) / args.columns)
-        for i, pl in enumerate(self.plots):
-            vboxes[i // per].addWidget(pl)
+        plotwidgets = self.plots.get_widgets()
+        per = math.ceil(len(plotwidgets) / args.columns)
+        for i, widget in enumerate(plotwidgets):
+            vboxes[i // per].addWidget(widget)
 
         self.timer = QtCore.QTimer()
         self.timer.setInterval(args.interval)
@@ -418,8 +492,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.timer.start()
 
     def update_plot_data(self):
-        for plot in self.plots:
-            plot.update()
+        self.plots.update()
 
 
 class ParamSpliter:
@@ -455,7 +528,6 @@ class ParamSpliter:
                 return float(self.params[pos])
             except ValueError:
                 return default
-            # return float(self.params[pos])
         else:
             return default
 
@@ -520,7 +592,7 @@ def main() -> None:
     #     metavar="CMD:ROW:COL:DIV:PTS:AVG",
     # )
     parser.add_argument(
-        "--pid",
+        "--plotpid",
         action="append",
         default=[],
         help="Add pid plot",
@@ -532,10 +604,16 @@ def main() -> None:
     #     help="Add a process to monitor",
     # )
     parser.add_argument(
-        "--cpu",
+        "--plotcpu",
         action="store_true",
         default=[],
         help="Add CPU usage plot",
+    )
+    parser.add_argument(
+        "--plotcpui",
+        action="store_true",
+        default=[],
+        help="Add CPU usage plot, all individual cores",
     )
     parser.add_argument(
         "--columns",
@@ -592,7 +670,8 @@ def main() -> None:
         logging.basicConfig(format=logging_format)
 
     app = QtWidgets.QApplication(sys.argv)
-    plot_list = []
+
+    plot_list = Plots()
 
     # Handle plot setup files
     for c in args.conf:
@@ -610,7 +689,7 @@ def main() -> None:
                     datapoints=get_param(plotarg, "datapoints", datapoints),
                     average=get_param(plotarg, "average", args.average),
                 )
-                plot_list.append(cpu_plot)
+                plot_list.add_plot(cpu_plot)
                 continue
 
             file_plot = FilePlot(
@@ -624,7 +703,7 @@ def main() -> None:
                 average=get_param(plotarg, "average", args.average),
             )
             logging.debug(file_plot)
-            plot_list.append(file_plot)
+            plot_list.add_plot(file_plot)
 
     for plotarg in args.plot:
         params = ParamSpliter(plotarg)
@@ -633,16 +712,17 @@ def main() -> None:
         datapoints = params.get_int(2, args.datapoints)
         average = params.get_int(3, args.average)
 
-        file_plot = FilePlot(
-            file_name=file_name,
-            title=file_name,
-            divider=divider,
-            datapoints=datapoints,
-            row="1",
-            col=1,
-            average=average,
+        plot_list.add_plot(
+            FilePlot(
+                file_name=file_name,
+                title=file_name,
+                divider=divider,
+                datapoints=datapoints,
+                row="1",
+                col=1,
+                average=average,
+            )
         )
-        plot_list.append(file_plot)
 
     for plotarg in args.plotrc:
         params = ParamSpliter(plotarg)
@@ -691,18 +771,19 @@ def main() -> None:
         # datapoints = get_pos_arg_int(params, 4, args.datapoints)
         # average = get_pos_arg_int(params, 5, args.average)
 
-        file_plot = FilePlot(
-            file_name=file_name,
-            title=title,
-            divider=divider,
-            datapoints=datapoints,
-            row=row,
-            col=col,
-            average=average,
+        plot_list.add_plot(
+            FilePlot(
+                file_name=file_name,
+                title=title,
+                divider=divider,
+                datapoints=datapoints,
+                row=row,
+                col=col,
+                average=average,
+            )
         )
-
-        plot_list.append(file_plot)
-        logging.debug(file_plot)
+        # plot_list.append(file_plot)
+        # logging.debug(file_plot)
 
     # for plotarg in args.plotexec:
     #     params = ParamSpliter(plotarg)
@@ -726,9 +807,10 @@ def main() -> None:
     #     plot_list.append(file_plot)
     #     logging.debug(file_plot)
 
-    for pid in args.pid:
-        pid_plot = PidPlot(pid=pid, datapoints=args.datapoints, average=args.average)
-        plot_list.append(pid_plot)
+    for pid in args.plotpid:
+        plot_list.add_plot(
+            PidPlot(pid=pid, datapoints=args.datapoints, average=args.average)
+        )
 
     # for proc in args.process:
     #     process = QtCore.QProcess()
@@ -748,18 +830,25 @@ def main() -> None:
     #     )
     #     plots.append(file_plot)
 
-    if args.cpu:
-        cpu_plot = CPUPlot(
-            title="CPU (%)", datapoints=args.datapoints, average=args.average
+    if args.plotcpu:
+        plot_list.add_plot(
+            CPUPlot(title="CPU (%)", datapoints=args.datapoints, average=args.average)
         )
-        plot_list.append(cpu_plot)
 
-    if len(plot_list) == 0:
+    if args.plotcpui:
+        plot_list.add_plot(
+            CPUPlotI(
+                datapoints=args.datapoints,
+                average=args.average,
+            )
+        )
+
+    if len(plot_list.plots) == 0:
         # logging.error("No plots defined")
         parser.print_help()
         return 1
 
-    for plotarg in plot_list:
+    for plotarg in plot_list.plots:
         logging.debug(plotarg)
 
     main = MainWindow(plot_list, args)
