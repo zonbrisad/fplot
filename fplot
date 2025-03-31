@@ -27,7 +27,6 @@ import traceback
 from dataclasses import dataclass
 import math
 from typing import Protocol
-from multiprocessing import cpu_count
 import psutil
 
 
@@ -212,70 +211,33 @@ class PidPlot(SimplePlot):
     """Plot CPU usage for a specific process"""
 
     def __init__(
-        self, pid=0, datapoints: int = 1000, title: str = "", divider=1, average=1
+        self,
+        pid: int = 0,
+        datapoints: int = 1000,
+        divider=1,
+        average=1,
     ):
+        self.pid = pid
+        self.process = psutil.Process(self.pid)
+        self.process.name()
         super().__init__(
-            title=f"pid {pid}",
+            title=f'pid {pid} "{self.process.name()}" (%)',
             datapoints=datapoints,
             divider=divider,
             average=average,
         )
-        self.pid = pid
-        self.pid_file = f"/proc/{self.pid}/stat"
-        self.first_run: bool = True
-        self.utime: int = 0
-        self.stime: int = 0
-        self.old_utime: int = 0
-        self.old_stime: int = 0
-        self.start_time: int = 0
-        self.old_start_time: int = 0
-        self.clk_tck: int = 100
-
-        process = QtCore.QProcess()
-        # process.setProcessChannelMode(QtCore.QProcess.ProcessChannelMode.MergedChannels)
-        process.start("getconf CLK_TCK")
-        process.waitForFinished()
-        data = process.readAll()
-        line = str(data, "utf-8")
-        try:
-            self.clk_tck = int(line)
-        except ValueError:
-            logging.error(f'Failed to convert "{line}" to int')
 
     def update(self) -> None:
-        with open(self.pid_file) as file:
-            line = file.read()
+        """Update plot with new value"""
 
-        line_s = line.split(" ")
+        if psutil.pid_exists(self.pid) is False:
+            logging.error(f"PID {self.pid} does not exist")
+            return
 
-        self.old_utime = self.utime
-        self.old_stime = self.stime
-        self.old_start_time = self.start_time
-
-        #
-        # /proc/<pid>/stat file information
-        #
-        # - https://www.baeldung.com/linux/total-process-cpu-usage
-        # - man 5 proc
-
-        # scheduled user mode time in clock ticks
-        self.utime = int(line_s[13]) / self.clk_tck
-        # scheduled kernel mode time in clock ticks
-        self.stime = int(line_s[14]) / self.clk_tck
-        self.start_time = int(line_s[21]) / self.clk_tck  #
-
-        if self.first_run is True:
-            self.old_utime = self.utime
-            self.old_stime = self.stime
-            self.old_start_time = self.start_time
-            self.first_run = False
-
-        val = (self.utime + self.stime - self.old_utime - self.old_stime) * 100
-        # logging.debug(line_s)
-        self.update_plot(val)
+        self.update_plot(self.process.cpu_percent())
 
     def __str__(self) -> str:
-        return f"PidPlot {self.pid_file} {self.pid}"
+        return f"PidPlot {self.pid}"
 
 
 class CPUPlot(SimplePlot):
@@ -808,8 +770,11 @@ def main() -> None:
     #     logging.debug(file_plot)
 
     for pid in args.plotpid:
+        if psutil.pid_exists(int(pid)) is False:
+            logging.error(f"PID {pid} does not exist")
+            continue
         plot_list.add_plot(
-            PidPlot(pid=pid, datapoints=args.datapoints, average=args.average)
+            PidPlot(pid=int(pid), datapoints=args.datapoints, average=args.average)
         )
 
     # for proc in args.process:
