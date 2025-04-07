@@ -176,7 +176,7 @@ Fplot supports plot configurations in json files.
 - [ ] Add: Local directory for storage of userdefined config scripts ~/.config/fplot
 - [ ] Automatic detection of file type
 - [ ] Individual timer for all plots
-- [ ] Derived plots, plots based on other plots.
+- [ ] Derived plots, plots based on other plots, downsampling, average, derivation
 - [x] Invividual plot Title
 
 ## License

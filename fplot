@@ -26,7 +26,7 @@ import sys  # We need sys so that we can pass argv to QApplication
 import traceback
 from dataclasses import dataclass
 import math
-from typing import Protocol
+from typing import Any, Protocol
 import psutil
 
 
@@ -125,7 +125,7 @@ class ParamParser:
     file_name: str = ""
     title: str = ""
     datapoints: int = 1000
-    divider = 1
+    divider: float = 1
     row: int = 1
     col: int = 1
     average: int = 1
@@ -135,8 +135,10 @@ class ParamParser:
     process: int = None
     param_string: str = ""
 
-    def __post_init__(self) -> None:
-
+    # def __post_init__(self) -> None:
+    def parse(self, param_string: str) -> None:
+        """Parse parameters from string"""
+        self.param_string = param_string
         p = self.param_string.split("@")
         self.params = p[0].split(":")
         self.file_name = self.get_str(0, "")
@@ -174,18 +176,21 @@ class ParamParser:
         else:
             return default
 
-    def plot(self) -> None:
+    def plot(self, param_string: str) -> None:
+        self.parse(param_string)
         self.divider = self.get_float(1, 1)
         self.datapoints = self.get_int(2, self.datapoints)
         self.average = self.get_int(3, self.average)
 
-    def plotf(self) -> None:
+    def plotf(self, param_string: str) -> None:
+        self.parse(param_string)
         self.col = self.get_int(1, 1)
         self.divider = self.get_float(2, 1)
         self.datapoints = self.get_int(3, self.datapoints)
         self.average = self.get_int(4, self.average)
 
-    def plotrc(self) -> None:
+    def plotrc(self, param_string: str) -> None:
+        self.parse(param_string)
         try:
             self.row = self.get_int(1, 1)
             if self.title == "":
@@ -622,18 +627,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plots.update()
 
 
-class JConf:
-    def __init__(self, file):
-        with file as infile:
+class JConf(ParamParser):
+    """Parse JSON config file"""
+
+    def __init__(self, file_name: str):
+        self.file_name = file_name
+        self.conf = {}
+
+        with self.file_name as infile:
             self.conf = json.load(infile)
 
-    def get_param(self, param, default):
-        if param in self.conf:
-            return self.conf[param]
+    def get_param(self, param: str, default: Any) -> Any:
+        """Get parameter from config file"""
+
+        return self.conf[param]
         return default
 
 
-def get_param(conf, param, default):
+def get_param(conf, param: str, default: Any) -> Any:
+    """Get parameter from config file"""
+
     if param in conf:
         return conf[param]
 
@@ -796,16 +809,20 @@ def main() -> None:
                 plot_list.add_plot(cpu_plot)
                 continue
 
-            file_plot = FilePlot(
+            params = ParamParser(
                 file_name=get_param(plotarg, "file", ""),
                 cmd=get_param(plotarg, "cmd", ""),
                 title=get_param(plotarg, "title", ""),
                 divider=get_param(plotarg, "divider", args.columns),
-                datapoints=get_param(plotarg, "datapoints", datapoints),
+                # datapoints=get_param(plotarg, "datapoints", datapoints),
                 row=get_param(plotarg, "row", 1),
                 col=get_param(plotarg, "col", 1),
-                average=get_param(plotarg, "average", args.average),
+                # average=get_param(plotarg, "average", args.average),
             )
+            # print(params)
+            # print(conf)
+            file_plot = FilePlot(params=params)
+
             logging.debug(file_plot)
             plot_list.add_plot(file_plot)
 
@@ -815,7 +832,7 @@ def main() -> None:
             average=args.average,
             datapoints=args.datapoints,
         )
-        params.plot()
+        params.plot(plotarg)
 
         plot_list.add_plot(
             FilePlot(
@@ -829,7 +846,7 @@ def main() -> None:
             average=args.average,
             datapoints=args.datapoints,
         )
-        params.plotrc()
+        params.plotrc(plotarg)
 
         plot_list.add_plot(
             FilePlot(
@@ -843,7 +860,7 @@ def main() -> None:
             average=args.average,
             datapoints=args.datapoints,
         )
-        params.plotf()
+        params.plotf(plotarg)
         plot_list.add_plot(FilePlotR(params=params))
 
     # for plotarg in args.plotexec:
