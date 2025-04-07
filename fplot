@@ -479,9 +479,14 @@ class FilePlotR(SimplePlot):
             self.file = open(self.file_name)
         except FileNotFoundError:
             logging.error(f"File not found: {self.file_name}")
+            self.file = None
 
     def get_line_val(self, col: int) -> float:
         """Get value from a specific row and column in a file"""
+
+        if self.file is None:
+            logging.error(f"File not found: {self.file_name}")
+            return 0
 
         try:
             line = self.file.readline()
