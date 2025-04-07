@@ -74,10 +74,6 @@ class XPlot(Protocol):
 
     def update(self) -> None: ...
 
-    #    def get_plot(self) -> pg.PlotWidget: ...
-
-    def xxx(self): ...
-
 
 def get_val(file: str) -> float:
     if os.path.isfile(file):
@@ -111,7 +107,6 @@ PaletteVSCodeL = [
     rgb2str(229, 229, 229),
 ]
 
-# pen = pg.mkPen(color=(255, 0, 100), width=1)
 plot_pen = pg.mkPen(color="#ff00ff", width=1)
 plot_pen = pg.mkPen(color=PaletteVSCodeL[9], width=1)
 axis_pen = pg.mkPen(color=PaletteVSCodeL[7], width=1)
@@ -128,6 +123,7 @@ class ParamParser:
     row: int = 1
     col: int = 1
     average: int = 1
+    moving_average: bool = True
     cmd: str = ""
     row_name: str = ""
     pid: int = 0
@@ -165,6 +161,28 @@ class ParamParser:
         else:
             return default
 
+    def get_int_ma(self, pos: int, default: int) -> {int, bool}:
+        """Get int from position, return default if not found and check for moving average"""
+
+        if pos > len(self.params):
+            return default
+
+        if self.params == "":
+            return default
+
+        if "m" in self.params[pos]:
+            moving_average = True
+        else:
+            moving_average = False
+
+        try:
+            val = self.params[pos].replace("m", "")
+            return int(val), moving_average
+        except ValueError:
+            pass
+
+        return default, moving_average
+
     def get_float(self, pos: int, default: float) -> float:
         if pos < len(self.params):
             if self.params == "":
@@ -180,14 +198,14 @@ class ParamParser:
         self.parse(param_string)
         self.divider = self.get_float(1, 1)
         self.datapoints = self.get_int(2, self.datapoints)
-        self.average = self.get_int(3, self.average)
+        self.average, self.moving_average = self.get_int_ma(3, self.average)
 
     def plotf(self, param_string: str) -> None:
         self.parse(param_string)
         self.col = self.get_int(1, 1)
         self.divider = self.get_float(2, 1)
         self.datapoints = self.get_int(3, self.datapoints)
-        self.average = self.get_int(4, self.average)
+        self.average, self.moving_average = self.get_int_ma(4, self.average)
 
     def plotrc(self, param_string: str) -> None:
         self.parse(param_string)
@@ -203,60 +221,79 @@ class ParamParser:
         self.col = self.get_int(2, 1)
         self.divider = self.get_float(3, 1)
         self.datapoints = self.get_int(4, self.datapoints)
-        self.average = self.get_int(5, self.average)
+        self.average, self.moving_average = self.get_int_ma(5, self.average)
 
         if self.title == "":
             self.title = f"{self.file_name}:{self.row}"
 
 
-@dataclass
+# @dataclass
 class AvgFilter:
-    len: int = 10
+    """Simple moving average filter"""
 
-    def __post_init__(self):
-        self.data = []
+    def __init__(self, len: int = 10, moving_average: bool = False) -> None:
+        self.len: int = len
+        self.data: list[int] = []
+        self.moving_average: bool = moving_average
 
     def update(self, new_val: float) -> float:
+        """Update filter with new value"""
+
+        if self.len == 1:
+            return new_val
+
         self.data.append(new_val)
-        if len(self.data) > self.len:
-            self.data.pop(0)
+        # self.moving_average = True
 
-        return sum(self.data) / len(self.data)
+        if self.moving_average is True:
+            if len(self.data) > self.len:
+                self.data.pop(0)
+            return sum(self.data) / len(self.data)
+        else:
+            if len(self.data) >= self.len:
+                val = sum(self.data) / len(self.data)
+                self.data.clear()
+                return val
 
 
-class SimplePlot(pg.PlotWidget):
+class SimplePlot:
     def __init__(
         self,
         parent=None,
         title: str = "",
         datapoints: int = 1000,
         average: int = 1,
+        moving_average: bool = False,
         divider: int = 1,
-        virtual: bool = False,
     ):
-        super().__init__(parent=parent, background="default", plotItem=None)
-        self.virtual = virtual
+        self.widget = pg.PlotWidget(
+            parent=parent, background="default", plotItem=None, title=title
+        )
+
         self.datapoints = datapoints
         self.divider = divider
-        self.filter = AvgFilter(average)
-        self.setTitle(title)
+        self.filter = AvgFilter(average, moving_average)
 
         self.x = list(range(self.datapoints))
         self.y = [0 for _ in range(self.datapoints)]
-        self.line = self.plot(self.x, self.y, pen=plot_pen)
 
+        self.line = self.widget.plot(self.x, self.y, pen=plot_pen)
         # self.line2 = self.plot(self.x, self.y, pen=pen2)
 
-        self.getAxis("bottom").setPen(axis_pen)
-        self.getAxis("left").setPen(axis_pen)
+        self.widget.getAxis("bottom").setPen(axis_pen)
+        self.widget.getAxis("left").setPen(axis_pen)
         # self.getAxis("right").setPen(plot_pen)
         # self.getAxis("top").setPen(plot_pen)
 
         # self.setLabel("left", "aaa")
         # self.setLabel("bottom", "bbb")
 
-    def update_plot(self, new_val):
+    def update_plot(self, new_val) -> None:
+        """Update plot with new value"""
         val = self.filter.update(new_val)
+
+        if val is None:
+            return
 
         self.x = self.x[1:]
         self.x.append(self.x[-1] + 1)
@@ -266,7 +303,7 @@ class SimplePlot(pg.PlotWidget):
 
     def get_widgets(self) -> list[pg.PlotWidget]:
         """Return plot widgets"""
-        return [self]
+        return [self.widget]
 
 
 class Plots:
@@ -476,6 +513,7 @@ class FilePlotR(SimplePlot):
             datapoints=params.datapoints,
             average=params.average,
             divider=params.divider,
+            moving_average=params.moving_average,
         )
 
         self.col = params.col
@@ -705,8 +743,7 @@ def main() -> None:
         action="append",
         default=[],
         help="Add file plot",
-        # metavar="file:div:pts:avg",
-        metavar="FILE:DIV:PTS:AVG",
+        metavar="FILE:DIV:PTS:AVG@TITLE",
     )
     parser.add_argument(
         "--plotrc",
@@ -733,7 +770,7 @@ def main() -> None:
         action="append",
         default=[],
         help="Add plot from file",
-        metavar="FILE",
+        metavar="FILE:COL:DIV:PTS:AVG",
     )
     # parser.add_argument(
     #     "--process",
@@ -942,7 +979,6 @@ def main() -> None:
         )
 
     if len(plot_list.plots) == 0:
-        # logging.error("No plots defined")
         parser.print_help()
         return 1
 
@@ -950,9 +986,16 @@ def main() -> None:
         logging.debug(plotarg)
 
     if "config" in locals():
-        main = MainWindow(plot_list, title=config.title, columns=config.columns)
+        main = MainWindow(
+            plot_list,
+            title=config.title,
+            columns=config.columns,
+            interval=config.interval,
+        )
     else:
-        main = MainWindow(plot_list, title=args.title, columns=args.columns)
+        main = MainWindow(
+            plot_list, title=args.title, columns=args.columns, interval=args.interval
+        )
     main.show()
     sys.exit(app.exec())
 
