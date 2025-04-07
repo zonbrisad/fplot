@@ -720,6 +720,15 @@ class FConf(ParamParser):
 
 
 epilog = f"""
+Plot parameters:
+  FILE    Source of data to plot
+  DIV     Divisor, with wich to divide the datavalues
+  PTS     Number of data points in plot
+  AVG     Averaging filter, 1 = no filtering, X = X point average, mXX = moving average in XX points
+  @TITLE  Title of plot
+  ROW     Row in file
+  COL     Column in file
+
 Examples:\n
 
 > fplot --plot /sys/class/hwmon/hwmon0/temp1_input:1000
@@ -750,7 +759,7 @@ def main() -> None:
         action="append",
         default=[],
         help="Add file plot row column",
-        metavar="FILE:ROW:COL:DIV:PTS:AVG",
+        metavar="FILE:ROW:COL:DIV:PTS:AVG@TITLE",
     )
     # parser.add_argument(
     #     "--plotexec",
@@ -770,7 +779,7 @@ def main() -> None:
         action="append",
         default=[],
         help="Add plot from file",
-        metavar="FILE:COL:DIV:PTS:AVG",
+        metavar="FILE:COL:DIV:PTS:AVG@TITLE",
     )
     # parser.add_argument(
     #     "--process",
