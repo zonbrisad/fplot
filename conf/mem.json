@@ -43,6 +43,10 @@
             "col": 2,
             "title": "Active (MB)",
             "divider": 1024
+        },
+        {
+            "file": "cpu",
+            "title": "CPU (%)"
         }
     ]
 }

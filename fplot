@@ -15,7 +15,6 @@
 from argparse import (
     ArgumentParser,
     FileType,
-    Namespace,
     RawDescriptionHelpFormatter,
 )
 import json
@@ -134,6 +133,7 @@ class ParamParser:
     pid: int = 0
     process: int = None
     param_string: str = ""
+    columns: int = 1
 
     # def __post_init__(self) -> None:
     def parse(self, param_string: str) -> None:
@@ -585,11 +585,17 @@ class ProcessPlot(SimplePlot):
 class MainWindow(QtWidgets.QMainWindow):
     """Main window for fplot"""
 
-    def __init__(self, plotwidgets: Plots, args: Namespace):
+    def __init__(
+        self,
+        plotwidgets: Plots,
+        title: str = "",
+        columns: int = 1,
+        interval: int = 1000,
+    ):
         super(MainWindow, self).__init__()
 
         self.plots = plotwidgets
-        self.setWindowTitle(args.title)
+        self.setWindowTitle(title)
         self.setWindowIcon(QIcon(App.ICON))
         centralWidget = QtWidgets.QWidget(self)
         self.setCentralWidget(centralWidget)
@@ -607,19 +613,19 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.graphWidget.setBackground('w')
 
         vboxes: list[QtWidgets.QHBoxLayout] = []
-        for i in range(args.columns):
+        for i in range(columns):
             vbox = QtWidgets.QVBoxLayout()
             vbox.setSpacing(0)
             hbox.addLayout(vbox)
             vboxes.append(vbox)
 
         plotwidgets = self.plots.get_widgets()
-        per = math.ceil(len(plotwidgets) / args.columns)
+        per = math.ceil(len(plotwidgets) / columns)
         for i, widget in enumerate(plotwidgets):
             vboxes[i // per].addWidget(widget)
 
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(args.interval)
+        self.timer.setInterval(interval)
         self.timer.timeout.connect(self.update_plot_data)
         self.timer.start()
 
@@ -627,30 +633,52 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plots.update()
 
 
-class JConf(ParamParser):
+class FConf(ParamParser):
     """Parse JSON config file"""
 
-    def __init__(self, file_name: str):
+    def __init__(
+        self, file_name: str, title: str = "", datapoints: int = 1000, columns: int = 1
+    ) -> None:
+        super().__init__()
         self.file_name = file_name
         self.conf = {}
 
         with self.file_name as infile:
             self.conf = json.load(infile)
 
+        self.title = self.get_param("title", title)
+        self.datapoints = self.get_param("datapoints", datapoints)
+        self.columns = self.get_param("columns", columns)
+        self.average = self.get_param("average", 1)
+
+        self.params = []
+        for plotd in self.conf["plots"]:
+            params = ParamParser(
+                file_name=self.get_param_conf(plotd, "file", ""),
+                cmd=self.get_param_conf(plotd, "cmd", ""),
+                title=self.get_param_conf(plotd, "title", ""),
+                divider=self.get_param_conf(plotd, "divider", self.divider),
+                row=self.get_param_conf(plotd, "row", 1),
+                col=self.get_param_conf(plotd, "col", 1),
+                # datapoints=self.get_param_conf(plotd,"datapoints", datapoints),
+                # average=self.get_param_conf(plotd,"average", args.average),
+            )
+            self.params.append(params)
+
     def get_param(self, param: str, default: Any) -> Any:
         """Get parameter from config file"""
 
-        return self.conf[param]
+        if param in self.conf:
+            return self.conf[param]
+
         return default
 
+    def get_param_conf(self, conf: dict, param: str, default: Any) -> Any:
+        """Get parameter from config file"""
+        if param in conf:
+            return conf[param]
 
-def get_param(conf, param: str, default: Any) -> Any:
-    """Get parameter from config file"""
-
-    if param in conf:
-        return conf[param]
-
-    return default
+        return default
 
 
 epilog = f"""
@@ -774,13 +802,6 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    # print(args)
-    # params = ParamParser(
-    #     param_string=args.plot[0], average=args.average, datapoints=args.datapoints
-    # )
-    # print(params)
-    # exit(0)
-
     if args.debug:
         logging.basicConfig(format=logging_format, level=logging.DEBUG)
     else:
@@ -791,38 +812,34 @@ def main() -> None:
     plot_list = Plots()
 
     # Handle plot setup files
-    for c in args.conf:
-        with c as infile:
-            conf = json.load(infile)
+    for config_file in args.conf:
 
-        args.title = get_param(conf, "title", args.title)
-        args.columns = get_param(conf, "columns", args.columns)
-        datapoints = get_param(conf, "datapoints", args.datapoints)
+        config = FConf(
+            file_name=config_file,
+            title=args.title,
+            datapoints=args.datapoints,
+            columns=args.columns,
+        )
 
-        for plotarg in conf["plots"]:
-            if get_param(plotarg, "file", "") == "cpu":
+        for params in config.params:
+            if params.file_name == "cpu":
                 cpu_plot = CPUPlot(
-                    title=get_param(plotarg, "title", ""),
-                    datapoints=get_param(plotarg, "datapoints", datapoints),
-                    average=get_param(plotarg, "average", args.average),
+                    title=params.title,
+                    datapoints=params.datapoints,
+                    average=params.average,
                 )
                 plot_list.add_plot(cpu_plot)
                 continue
 
-            params = ParamParser(
-                file_name=get_param(plotarg, "file", ""),
-                cmd=get_param(plotarg, "cmd", ""),
-                title=get_param(plotarg, "title", ""),
-                divider=get_param(plotarg, "divider", args.columns),
-                # datapoints=get_param(plotarg, "datapoints", datapoints),
-                row=get_param(plotarg, "row", 1),
-                col=get_param(plotarg, "col", 1),
-                # average=get_param(plotarg, "average", args.average),
-            )
-            # print(params)
-            # print(conf)
-            file_plot = FilePlot(params=params)
+            if params.file_name == "cpui":
+                cpu_plot = CPUPlotI(
+                    datapoints=params.datapoints,
+                    average=params.average,
+                )
+                plot_list.add_plot(cpu_plot)
+                continue
 
+            file_plot = FilePlot(params=params)
             logging.debug(file_plot)
             plot_list.add_plot(file_plot)
 
@@ -932,7 +949,10 @@ def main() -> None:
     for plotarg in plot_list.plots:
         logging.debug(plotarg)
 
-    main = MainWindow(plot_list, args)
+    if "config" in locals():
+        main = MainWindow(plot_list, title=config.title, columns=config.columns)
+    else:
+        main = MainWindow(plot_list, title=args.title, columns=args.columns)
     main.show()
     sys.exit(app.exec())
 
@@ -946,7 +966,7 @@ if __name__ == "__main__":
     except SystemExit as e:  # sys.exit()
         raise e
     except Exception as e:
-        print("ERROR, UNEXPECTED EXCEPTION")
-        print(str(e))
+        logging.error("UNEXPECTED EXCEPTION")
+        logging.error(str(e))
         traceback.print_exc()
         os._exit(1)
