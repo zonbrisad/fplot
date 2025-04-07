@@ -119,6 +119,92 @@ axis_pen = pg.mkPen(color=PaletteVSCodeL[7], width=1)
 
 
 @dataclass
+class ParamParser:
+    """Parse parameters"""
+
+    file_name: str = ""
+    title: str = ""
+    datapoints: int = 1000
+    divider = 1
+    row: int = 1
+    col: int = 1
+    average: int = 1
+    cmd: str = ""
+    row_name: str = ""
+    pid: int = 0
+    process: int = None
+    param_string: str = ""
+
+    def __post_init__(self) -> None:
+
+        p = self.param_string.split("@")
+        self.params = p[0].split(":")
+        self.file_name = self.get_str(0, "")
+        if len(p) > 1:
+            self.title = p[1]
+        else:
+            self.title = self.file_name
+
+    def get_str(self, pos: int, default: str) -> str:
+        """Get string from position, return default if not found"""
+        if pos < len(self.params):
+            return self.params[pos]
+        else:
+            return default
+
+    def get_int(self, pos: int, default: int) -> int:
+        if pos < len(self.params):
+            if self.params == "":
+                return default
+            try:
+                return int(self.params[pos])
+            except ValueError:
+                return default
+        else:
+            return default
+
+    def get_float(self, pos: int, default: float) -> float:
+        if pos < len(self.params):
+            if self.params == "":
+                return default
+            try:
+                return float(self.params[pos])
+            except ValueError:
+                return default
+        else:
+            return default
+
+    def plot(self) -> None:
+        self.divider = self.get_float(1, 1)
+        self.datapoints = self.get_int(2, self.datapoints)
+        self.average = self.get_int(3, self.average)
+
+    def plotf(self) -> None:
+        self.col = self.get_int(1, 1)
+        self.divider = self.get_float(2, 1)
+        self.datapoints = self.get_int(3, self.datapoints)
+        self.average = self.get_int(4, self.average)
+
+    def plotrc(self) -> None:
+        try:
+            self.row = self.get_int(1, 1)
+            if self.title == "":
+                self.title = f"{self.file_name}:{self.row}"
+        except ValueError:
+            self.row_name = self.get_str(1, "")
+            if self.title == "":
+                self.title = f"{self.file_name}:{self.row_name}"
+
+        self.col = self.get_int(2, 1)
+        self.divider = self.get_float(3, 1)
+        self.datapoints = self.get_int(4, self.datapoints)
+        self.average = self.get_int(5, self.average)
+
+        if self.title == "":
+            self.title = f"{self.file_name}:{self.row}"
+
+
+@dataclass
 class AvgFilter:
     len: int = 10
 
@@ -214,8 +300,8 @@ class PidPlot(SimplePlot):
         self,
         pid: int = 0,
         datapoints: int = 1000,
-        divider=1,
-        average=1,
+        divider: int = 1,
+        average: int = 1,
     ):
         self.pid = pid
         self.process = psutil.Process(self.pid)
@@ -310,6 +396,135 @@ class FilePlot(SimplePlot):
 
     def __init__(
         self,
+        params: ParamParser,
+    ) -> None:
+        super().__init__(
+            title=params.title,
+            datapoints=params.datapoints,
+            average=params.average,
+            divider=params.divider,
+        )
+
+        self.col = params.col
+        self.file_name = params.file_name
+
+        if type(params.row) is int:
+            self.row = params.row
+            return
+
+        if params.row.isnumeric():
+            self.row = int(params.row)
+        else:
+            with open(self.file_name) as file:
+                lines = [line for line in file]
+
+            for i, line in enumerate(lines):
+                if params.row in line:
+                    break
+            self.row = i + 1
+
+    def get_line_val(self, row: int, col: int) -> float:
+        """Get value from a specific row and column in a file"""
+
+        try:
+            with open(self.file_name) as file:
+                lines = file.readlines()
+        except FileNotFoundError:
+            logging.error(f"File not found: {self.file_name}")
+            return 0
+
+        line = lines[row - 1].replace("\n", "")
+        columns = line.split(" ")
+
+        # Remove empty strings
+        columns = [column for column in columns if column != ""]
+
+        try:
+            column = columns[col - 1]
+            val = float(column) / self.divider
+            logging.debug(f"{self.file_name} {val} {row} {col}")
+        except IndexError:
+            logging.error(f'Failed to get column {col} in line: "{line}" {columns}')
+            return 0
+        except ValueError:  # If value is not a number
+            logging.error(f'Failed to convert "{column}" to value, in line: "{line}"')
+            val = 0
+
+        return val
+
+    def update(self):
+        """Update plot with new value"""
+
+        val = self.get_line_val(self.row, self.col)
+        self.update_plot(val)
+
+    def __str__(self) -> str:
+        return f"FilePlot {self.file_name} {self.row} {self.col}"
+
+
+class FilePlotR(SimplePlot):
+    """Plot data from a file"""
+
+    def __init__(self, params: ParamParser) -> None:
+        super().__init__(
+            title=params.title,
+            datapoints=params.datapoints,
+            average=params.average,
+            divider=params.divider,
+        )
+
+        self.col = params.col
+        self.file_name = params.file_name
+        try:
+            self.file = open(self.file_name)
+        except FileNotFoundError:
+            logging.error(f"File not found: {self.file_name}")
+
+    def get_line_val(self, col: int) -> float:
+        """Get value from a specific row and column in a file"""
+
+        try:
+            line = self.file.readline()
+        except FileNotFoundError:
+            logging.error(f"File not found: {self.file_name}")
+            return 0
+        except EOFError:
+            logging.error(f"End of file: {self.file_name}")
+            return 0
+
+        if line == "":
+            return 0
+
+        columns = line.split(" ")
+        # Remove empty strings
+        columns = [column for column in columns if column != ""]
+        try:
+            column = columns[col - 1]
+            val = float(column) / self.divider
+            logging.debug(f"{self.file_name} {val} {col}")
+        except IndexError:
+            logging.error(f'Failed to get column {col} in line: "{line}" {columns}')
+            val = 0
+        except ValueError:  # If value is not a number
+            logging.error(f'Failed to convert "{column}" to value, in line: "{line}"')
+            val = 0
+        return val
+
+    def update(self):
+        """Update plot with new value"""
+
+        val = self.get_line_val(self.col)
+        self.update_plot(val)
+
+    def __str__(self) -> str:
+        return f"FilePlot {self.file_name} {self.row} {self.col}"
+
+
+class ProcessPlot(SimplePlot):
+    """Plot data from a process"""
+
+    def __init__(
+        self,
         file_name: str = "",
         cmd: str = "",
         row: str = "1",
@@ -330,81 +545,26 @@ class FilePlot(SimplePlot):
 
         self.process = QtCore.QProcess()
 
-        if type(row) is int:
-            self.row = row
-            return
-
-        if row.isnumeric():
-            self.row = int(row)
-        else:
-            with open(self.file_name) as file:
-                lines = [line for line in file]
-
-            for i, line in enumerate(lines):
-                if row in line:
-                    break
-            self.row = i + 1
-
-    def get_line_val(self, row: int, col: int) -> float:
-        """Get value from a specific row and column in a file"""
-
-        if os.path.isfile(self.file_name):
-            with open(self.file_name) as file:
-                lines = file.readlines()
-            line = lines[row - 1].replace("\n", "")
-
-            columns = line.split(" ")
-
-            # Remove empty strings
-            columns = [column for column in columns if column != ""]
-
-            try:
-                column = columns[col - 1]
-            except IndexError:
-                logging.error(f'Failed to get column {col} in line: "{line}" {columns}')
-                return 0
-
-            try:
-                val = float(column) / self.divider
-                logging.debug(f"{self.file_name} {val} {row} {col}")
-            except ValueError:  # If value is not a number
-                logging.error(
-                    f'Failed to convert "{column}" to value, in line: "{line}"'
-                )
-                val = 0
-
-            return val
-        else:
-            logging.error(f"File not found: {self.file_name}")
-            return 0
-
     def update(self):
         """Update plot with new value"""
 
-        if self.cmd != "":
-            self.process.start(self.cmd)
-            self.process.waitForFinished()
-            data = self.process.readAll()
+        self.process.start(self.cmd)
+        self.process.waitForFinished()
+        data = self.process.readAll()
 
-            lines = str(data, "utf-8").split("\n")
-            line = lines[self.row - 1]
-            columns = re.split(r" |\t", line)
+        lines = str(data, "utf-8").split("\n")
+        line = lines[self.row - 1]
+        columns = re.split(r" |\t", line)
+        # remove empty strings
+        columns = [x for x in columns if x != ""]
+        column = columns[self.col - 1]
 
-            # remove empty strings
-            columns = [x for x in columns if x != ""]
-            column = columns[self.col - 1]
-
-            try:
-                val = float(column) / self.divider
-                logging.debug(f"Exec: {self.cmd}  {self.col} {self.row}")
-            except ValueError:
-                logging.error(
-                    f'Failed to convert "{column}" to value, in line: "{line}"'
-                )
-                val = 0
-
-        else:
-            val = self.get_line_val(self.row, self.col)
+        try:
+            val = float(column) / self.divider
+            logging.debug(f"Exec: {self.cmd}  {self.col} {self.row}")
+        except ValueError:
+            logging.error(f'Failed to convert "{column}" to value, in line: "{line}"')
+            val = 0
 
         self.update_plot(val)
 
@@ -455,43 +615,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def update_plot_data(self):
         self.plots.update()
-
-
-class ParamSpliter:
-    """Split parameters, and return default if not found"""
-
-    def __init__(self, param_string: str) -> None:
-        self.params = param_string.split(":")
-        # print(self.params)
-
-    def get_str(self, pos: int, default: str) -> str:
-        """Get string from position, return default if not found"""
-        if pos < len(self.params):
-            return self.params[pos]
-        else:
-            return default
-
-    def get_int(self, pos: int, default: int) -> int:
-        if pos < len(self.params):
-            if self.params == "":
-                return default
-            try:
-                return int(self.params[pos])
-            except ValueError:
-                return default
-        else:
-            return default
-
-    def get_float(self, pos: int, default: float) -> float:
-        if pos < len(self.params):
-            if self.params == "":
-                return default
-            try:
-                return float(self.params[pos])
-            except ValueError:
-                return default
-        else:
-            return default
 
 
 class JConf:
@@ -558,6 +681,13 @@ def main() -> None:
         action="append",
         default=[],
         help="Add pid plot",
+    )
+    parser.add_argument(
+        "--plotf",
+        action="append",
+        default=[],
+        help="Add plot from file",
+        metavar="FILE",
     )
     # parser.add_argument(
     #     "--process",
@@ -626,6 +756,13 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    # print(args)
+    # params = ParamParser(
+    #     param_string=args.plot[0], average=args.average, datapoints=args.datapoints
+    # )
+    # print(params)
+    # exit(0)
+
     if args.debug:
         logging.basicConfig(format=logging_format, level=logging.DEBUG)
     else:
@@ -668,84 +805,41 @@ def main() -> None:
             plot_list.add_plot(file_plot)
 
     for plotarg in args.plot:
-        params = ParamSpliter(plotarg)
-        file_name = params.get_str(0, "")
-        divider = params.get_float(1, 1)
-        datapoints = params.get_int(2, args.datapoints)
-        average = params.get_int(3, args.average)
+        params = ParamParser(
+            param_string=plotarg,
+            average=args.average,
+            datapoints=args.datapoints,
+        )
+        params.plot()
 
         plot_list.add_plot(
             FilePlot(
-                file_name=file_name,
-                title=file_name,
-                divider=divider,
-                datapoints=datapoints,
-                row="1",
-                col=1,
-                average=average,
+                params=params,
             )
         )
 
     for plotarg in args.plotrc:
-        params = ParamSpliter(plotarg)
-        file_name = params.get_str(0, "")
-
-        try:
-            row = params.get_int(1, 1)
-            title = f"{file_name}:{row}"
-        except ValueError:
-            row_name = params.get_str(1, "")
-            title = f"{file_name}:{row_name}"
-            with open(file_name) as file:
-                lines = [line for line in file]
-
-            for i, line in enumerate(lines):
-                if row_name in line:
-                    break
-            row = i + 1
-            logging.debug(f"Row {row}")
-
-        col = params.get_int(2, 1)
-        divider = params.get_float(3, 1)
-        datapoints = params.get_int(4, args.datapoints)
-        average = params.get_int(5, args.average)
-
-        # params = plot.split(":")
-        # file_name = get_pos_arg_str(params, 0, "")
-
-        # try:
-        #     row = get_pos_arg_int(params, 1, 1)
-        #     title = f"{file_name}:{row}"
-        # except ValueError:
-        #     row_name = get_pos_arg_str(params, 1, "")
-        #     title = f"{file_name}:{row_name}"
-        #     with open(file_name) as file:
-        #         lines = [line for line in file]
-
-        #     for i, line in enumerate(lines):
-        #         if row_name in line:
-        #             break
-        #     row = i + 1
-        #     logging.debug(f"Row {row}")
-
-        # col = get_pos_arg_int(params, 2, 1)
-        # divider = get_pos_arg_float(params, 3, 1)
-        # datapoints = get_pos_arg_int(params, 4, args.datapoints)
-        # average = get_pos_arg_int(params, 5, args.average)
+        params = ParamParser(
+            param_string=plotarg,
+            average=args.average,
+            datapoints=args.datapoints,
+        )
+        params.plotrc()
 
         plot_list.add_plot(
             FilePlot(
-                file_name=file_name,
-                title=title,
-                divider=divider,
-                datapoints=datapoints,
-                row=row,
-                col=col,
-                average=average,
+                params=params,
             )
         )
-        # plot_list.append(file_plot)
-        # logging.debug(file_plot)
+
+    for plotarg in args.plotf:
+        params = ParamParser(
+            param_string=plotarg,
+            average=args.average,
+            datapoints=args.datapoints,
+        )
+        params.plotf()
+        plot_list.add_plot(FilePlotR(params=params))
 
     # for plotarg in args.plotexec:
     #     params = ParamSpliter(plotarg)

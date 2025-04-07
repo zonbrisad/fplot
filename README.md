@@ -174,5 +174,9 @@ Fplot supports plot configurations in json files.
 - [ ] finding min/max
 - [ ] Add: option to generate template config file
 - [ ] Add: Local directory for storage of userdefined config scripts ~/.config/fplot
+- [ ] Automatic detection of file type
+- [ ] Individual timer for all plots
+- [ ] Derived plots, plots based on other plots.
+- [x] Invividual plot Title
 
 ## License
