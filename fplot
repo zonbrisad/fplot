@@ -165,10 +165,10 @@ class ParamParser:
         """Get int from position, return default if not found and check for moving average"""
 
         if pos > len(self.params):
-            return default
+            return default, False
 
         if self.params == "":
-            return default
+            return default, False
 
         if "m" in self.params[pos]:
             moving_average = True
@@ -724,10 +724,11 @@ Plot parameters:
   FILE    Source of data to plot
   DIV     Divisor, with wich to divide the datavalues
   PTS     Number of data points in plot
-  AVG     Averaging filter, 1 = no filtering, X = X point average, mXX = moving average in XX points
-  @TITLE  Title of plot
+  AVG     Filter, 1 = no filtering, XX = XX point average, mXX = XX point moving average
+  @TITLE  Title text of plot
   ROW     Row in file
   COL     Column in file
+  PID     Process ID to plot
 
 Examples:\n
 
@@ -773,6 +774,7 @@ def main() -> None:
         action="append",
         default=[],
         help="Add pid plot",
+        metavar="PID",
     )
     parser.add_argument(
         "--plotf",
