@@ -145,26 +145,27 @@ class ParamParser:
 
     def get_str(self, pos: int, default: str) -> str:
         """Get string from position, return default if not found"""
-        if pos < len(self.params):
-            return self.params[pos]
-        else:
+
+        if pos >= len(self.params):
             return default
 
+        return self.params[pos]
+
     def get_int(self, pos: int, default: int) -> int:
-        if pos < len(self.params):
-            if self.params == "":
-                return default
-            try:
-                return int(self.params[pos])
-            except ValueError:
-                return default
-        else:
+        if pos >= len(self.params):
+            return default
+
+        if self.params == "":
+            return default
+        try:
+            return int(self.params[pos])
+        except ValueError:
             return default
 
     def get_int_ma(self, pos: int, default: int) -> {int, bool}:
         """Get int from position, return default if not found and check for moving average"""
 
-        if pos > len(self.params):
+        if pos >= len(self.params):
             return default, False
 
         if self.params == "":
@@ -184,14 +185,14 @@ class ParamParser:
         return default, moving_average
 
     def get_float(self, pos: int, default: float) -> float:
-        if pos < len(self.params):
-            if self.params == "":
-                return default
-            try:
-                return float(self.params[pos])
-            except ValueError:
-                return default
-        else:
+        if pos >= len(self.params):
+            return default
+
+        if self.params == "":
+            return default
+        try:
+            return float(self.params[pos])
+        except ValueError:
             return default
 
     def plot(self, param_string: str) -> None:
