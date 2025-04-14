@@ -228,6 +228,82 @@ class ParamParser:
             self.title = f"{self.file_name}:{self.row}"
 
 
+@dataclass
+class PlotParam:
+    """Alternative parameter parser, using single letter prefixes"""
+
+    file_name: str = ""
+    title: str = ""
+    datapoints: int = 1000
+    divider: float = 1
+    row: int = 1
+    col: int = 1
+    average: int = 1
+    moving_average: bool = True
+    cmd: str = ""
+    row_name: str = ""
+    pid: int = 0
+    process: int = None
+    param_string: str = ""
+    columns: int = 1
+
+    def __post_init__(self) -> None:
+        # logging.debug(f"ParamParserA {self.param_string}")
+        self.parse(self.param_string)
+
+    def parse(self, param_string: str) -> None:
+        """Parse parameters from string"""
+        self.param_string = param_string
+        p = self.param_string.split("@")
+        parameters = p[0].split(":")
+
+        for i, parameter in enumerate(parameters):
+            if i == 0:
+                self.file_name = parameter
+                logging.debug(f"PlotParam: file_name {self.file_name}")
+
+            elif parameter[0].upper() == "D":
+                try:
+                    self.divider = float(parameter[1:])
+                    logging.debug(f"PlotParam: divider {self.divider}")
+                except ValueError:
+                    logging.error(f"Failed to convert {parameter[1:]} to float")
+
+            elif parameter[0].upper() == "P":
+                try:
+                    self.datapoints = int(parameter[1:])
+                    logging.debug(f"PlotParam: datapoints {self.datapoints}")
+                except ValueError:
+                    logging.error(f"Failed to convert {parameter[1:]} to int")
+
+            elif parameter[0].upper() == "A":
+                if "m" in parameter:
+                    self.moving_average = True
+                else:
+                    self.moving_average = False
+                try:
+                    self.average = int(parameter[1:].replace("m", ""))
+                    logging.debug(f"PlotParam: average {self.average}")
+                except ValueError:
+                    logging.error(f"Failed to convert {parameter[1:]} to int")
+
+            elif parameter[0].upper() == "R":
+                try:
+                    self.row = int(parameter[1:])
+                    logging.debug(f"PlotParam: row {self.row}")
+                except ValueError:
+                    self.row_name = parameter[1:]
+                    logging.error(f"Failed to convert {parameter[1:]} to int")
+                    if self.title == "":
+                        self.title = f"{self.file_name}:{self.row_name}"
+            elif parameter[0].upper() == "C":
+                try:
+                    self.col = int(parameter[1:])
+                    logging.debug(f"PlotParam: col {self.col}")
+                except ValueError:
+                    logging.error(f"Failed to convert {parameter[1:]} to int")
+
+
 # @dataclass
 class AvgFilter:
     """Simple moving average filter"""
@@ -803,6 +879,12 @@ def main() -> None:
         help="Add CPU usage plot, all individual cores",
     )
     parser.add_argument(
+        "--paramtest",
+        action="append",
+        default=[],
+        help="Testing of new parameter parser",
+    )
+    parser.add_argument(
         "--columns",
         action="store",
         default=Def.COLUMNS,
@@ -950,6 +1032,11 @@ def main() -> None:
     #     )
     #     plot_list.append(file_plot)
     #     logging.debug(file_plot)
+
+    for param in args.paramtest:
+        params = PlotParam(param_string=param)
+        logging.debug(f"param: {params}")
+        sys.exit(0)
 
     for pid in args.plotpid:
         if psutil.pid_exists(int(pid)) is False:

@@ -59,7 +59,6 @@ pyqtgraph
 
 ## Install
 
-
 ### Download
 
 ```bash
@@ -179,5 +178,31 @@ Fplot supports plot configurations in json files.
 - [ ] Individual timer for all plots
 - [ ] Derived plots, plots based on other plots, downsampling, average, derivation
 - [x] Invividual plot Title
+
+## Suggestions
+
+### Alternative plot parameter system
+
+Current plot parameter system is position based.
+
+Ex.
+--plotrc FILE:ROW:COLUMN:DIVIDER:POINTS:FILTER@"Title"
+
+To skip a parameter can be done by entering a ':' to get to the next parameter. This method works, but is error prone and somewhat impractical.
+
+Ex:
+--plotrc filename:2:3:::10@"Title"
+
+An alternative solution could look something like this.
+--plotrc FILE:RXX:CXX:DXX:PXX:FXX@"Title"
+
+Each paramter value has a single letter prefix followed by a value. This means that paramters can be given in any order seen fit by the user. It also simplifies future enhancments.
+
+ R - Row
+ C - Column
+ D - Divider
+ M - Multiplier
+ P - Datapoints
+ F - Filter
 
 ## License
