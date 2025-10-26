@@ -28,19 +28,22 @@ import math
 from typing import Any, Protocol
 import psutil
 
-
-from PyQt6 import QtCore, QtWidgets
-from PyQt6.QtGui import QIcon
+try:
+    from PyQt6 import QtCore, QtWidgets
+    from PyQt6.QtGui import QIcon
+except ModuleNotFoundError:
+    print("\nPyQt6 not installed.")
+    print("\n>sudo apt install python3-pyqt6")
+    exit(0)
 
 # from PyQt6.QtWidgets import QPushButton
 
 try:
     import pyqtgraph as pg
 except ModuleNotFoundError:
-    print("\nYou need library PyQtGraph to run this program.")
-    print("\nTo install:")
-    print(">apt install python3-pyqtgraph")
-    print("\nAlt:")
+    print("\nPyQtGraph not installed.")
+    print("\n>apt install python3-pyqtgraph")
+    print("Alternatively, install via pip:")
     print(">pip install pyqtgraph")
     exit(0)
 

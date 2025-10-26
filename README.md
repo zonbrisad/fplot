@@ -205,4 +205,9 @@ Each paramter value has a single letter prefix followed by a value. This means t
  P - Datapoints
  F - Filter
 
+ Alt. 
+
+ A - Average
+ MA - Moving average
+
 ## License
