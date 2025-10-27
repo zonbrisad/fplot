@@ -174,13 +174,15 @@ class ParamParser:
         if self.params == "":
             return default, False
 
-        if "m" in self.params[pos]:
+        if "M" in self.params[pos].upper():
             moving_average = True
         else:
             moving_average = False
 
         try:
-            val = self.params[pos].replace("m", "")
+            val = self.params[pos].replace("m", "").replace("M", "")
+            logging.debug(f"Average: {val}")
+            logging.debug(f"Moving average: {moving_average}")
             return int(val), moving_average
         except ValueError:
             pass
@@ -524,6 +526,7 @@ class FilePlot(SimplePlot):
             title=params.title,
             datapoints=params.datapoints,
             average=params.average,
+            moving_average=params.moving_average,
             divider=params.divider,
         )
 
@@ -980,11 +983,11 @@ def main() -> None:
     for plotarg in args.plot:
         params = ParamParser(
             param_string=plotarg,
-            average=args.average,
             datapoints=args.datapoints,
+            average=args.average,
         )
         params.plot(plotarg)
-
+        print(repr(params))
         plot_list.add_plot(
             FilePlot(
                 params=params,
