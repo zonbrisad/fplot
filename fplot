@@ -113,122 +113,122 @@ PaletteVSCodeL = [
 plot_pen = pg.mkPen(color=PaletteVSCodeL[9], width=1)
 axis_pen = pg.mkPen(color=PaletteVSCodeL[7], width=1)
 
-@dataclass
-class ParamParser:
-    """Parse parameters"""
+# @dataclass
+# class ParamParser:
+#     """Parse parameters"""
 
-    file_name: str = ""
-    title: str = ""
-    datapoints: int = 1000
-    divider: float = 1
-    row: int = 1
-    col: int = 1
-    average: int = 1
-    moving_average: bool = True
-    cmd: str = ""
-    row_name: str = ""
-    pid: int = 0
-    process: int = None
-    param_string: str = ""
-    columns: int = 1
+#     file_name: str = ""
+#     title: str = ""
+#     datapoints: int = 1000
+#     divider: float = 1
+#     row: int = 1
+#     col: int = 1
+#     average: int = 1
+#     moving_average: bool = True
+#     cmd: str = ""
+#     row_name: str = ""
+#     pid: int = 0
+#     process: int = None
+#     param_string: str = ""
+#     columns: int = 1
 
-    # def __post_init__(self) -> None:
-    def parse(self, param_string: str) -> None:
-        """Parse parameters from string"""
-        self.param_string = param_string
-        p = self.param_string.split("@")
-        self.params = p[0].split(":")
-        self.file_name = self.get_str(0, "")
-        if len(p) > 1:
-            self.title = p[1]
-        else:
-            self.title = self.file_name
+#     # def __post_init__(self) -> None:
+#     def parse(self, param_string: str) -> None:
+#         """Parse parameters from string"""
+#         self.param_string = param_string
+#         p = self.param_string.split("@")
+#         self.params = p[0].split(":")
+#         self.file_name = self.get_str(0, "")
+#         if len(p) > 1:
+#             self.title = p[1]
+#         else:
+#             self.title = self.file_name
 
-    def get_str(self, pos: int, default: str) -> str:
-        """Get string from position, return default if not found"""
+#     def get_str(self, pos: int, default: str) -> str:
+#         """Get string from position, return default if not found"""
 
-        if pos >= len(self.params):
-            return default
+#         if pos >= len(self.params):
+#             return default
 
-        return self.params[pos]
+#         return self.params[pos]
 
-    def get_int(self, pos: int, default: int) -> int:
-        if pos >= len(self.params):
-            return default
+#     def get_int(self, pos: int, default: int) -> int:
+#         if pos >= len(self.params):
+#             return default
 
-        if self.params == "":
-            return default
-        try:
-            return int(self.params[pos])
-        except ValueError:
-            return default
+#         if self.params == "":
+#             return default
+#         try:
+#             return int(self.params[pos])
+#         except ValueError:
+#             return default
 
-    def get_int_ma(self, pos: int, default: int) -> {int, bool}:
-        """Get int from position, return default if not found and check for moving average"""
+#     def get_int_ma(self, pos: int, default: int) -> {int, bool}:
+#         """Get int from position, return default if not found and check for moving average"""
 
-        if pos >= len(self.params):
-            return default, False
+#         if pos >= len(self.params):
+#             return default, False
 
-        if self.params == "":
-            return default, False
+#         if self.params == "":
+#             return default, False
 
-        if "M" in self.params[pos].upper():
-            moving_average = True
-        else:
-            moving_average = False
+#         if "M" in self.params[pos].upper():
+#             moving_average = True
+#         else:
+#             moving_average = False
 
-        try:
-            val = self.params[pos].replace("m", "").replace("M", "")
-            logging.debug(f"Average: {val}")
-            logging.debug(f"Moving average: {moving_average}")
-            return int(val), moving_average
-        except ValueError:
-            pass
+#         try:
+#             val = self.params[pos].replace("m", "").replace("M", "")
+#             logging.debug(f"Average: {val}")
+#             logging.debug(f"Moving average: {moving_average}")
+#             return int(val), moving_average
+#         except ValueError:
+#             pass
 
-        return default, moving_average
+#         return default, moving_average
 
-    def get_float(self, pos: int, default: float) -> float:
-        if pos >= len(self.params):
-            return default
+#     def get_float(self, pos: int, default: float) -> float:
+#         if pos >= len(self.params):
+#             return default
 
-        if self.params == "":
-            return default
-        try:
-            return float(self.params[pos])
-        except ValueError:
-            return default
+#         if self.params == "":
+#             return default
+#         try:
+#             return float(self.params[pos])
+#         except ValueError:
+#             return default
 
-    def plot(self, param_string: str) -> None:
-        self.parse(param_string)
-        self.divider = self.get_float(1, 1)
-        self.datapoints = self.get_int(2, self.datapoints)
-        self.average, self.moving_average = self.get_int_ma(3, self.average)
+#     def plot(self, param_string: str) -> None:
+#         self.parse(param_string)
+#         self.divider = self.get_float(1, 1)
+#         self.datapoints = self.get_int(2, self.datapoints)
+#         self.average, self.moving_average = self.get_int_ma(3, self.average)
 
-    def plotf(self, param_string: str) -> None:
-        self.parse(param_string)
-        self.col = self.get_int(1, 1)
-        self.divider = self.get_float(2, 1)
-        self.datapoints = self.get_int(3, self.datapoints)
-        self.average, self.moving_average = self.get_int_ma(4, self.average)
+#     def plotf(self, param_string: str) -> None:
+#         self.parse(param_string)
+#         self.col = self.get_int(1, 1)
+#         self.divider = self.get_float(2, 1)
+#         self.datapoints = self.get_int(3, self.datapoints)
+#         self.average, self.moving_average = self.get_int_ma(4, self.average)
 
-    def plotrc(self, param_string: str) -> None:
-        self.parse(param_string)
-        try:
-            self.row = self.get_int(1, 1)
-            if self.title == "":
-                self.title = f"{self.file_name}:{self.row}"
-        except ValueError:
-            self.row_name = self.get_str(1, "")
-            if self.title == "":
-                self.title = f"{self.file_name}:{self.row_name}"
+#     def plotrc(self, param_string: str) -> None:
+#         self.parse(param_string)
+#         try:
+#             self.row = self.get_int(1, 1)
+#             if self.title == "":
+#                 self.title = f"{self.file_name}:{self.row}"
+#         except ValueError:
+#             self.row_name = self.get_str(1, "")
+#             if self.title == "":
+#                 self.title = f"{self.file_name}:{self.row_name}"
 
-        self.col = self.get_int(2, 1)
-        self.divider = self.get_float(3, 1)
-        self.datapoints = self.get_int(4, self.datapoints)
-        self.average, self.moving_average = self.get_int_ma(5, self.average)
+#         self.col = self.get_int(2, 1)
+#         self.divider = self.get_float(3, 1)
+#         self.datapoints = self.get_int(4, self.datapoints)
+#         self.average, self.moving_average = self.get_int_ma(5, self.average)
 
-        if self.title == "":
-            self.title = f"{self.file_name}:{self.row}"
+#         if self.title == "":
+#             self.title = f"{self.file_name}:{self.row}"
 
 
 @dataclass
@@ -534,79 +534,6 @@ class CPUPlotI:
     def __str__(self) -> str:
         return "CPUPlot"
 
-
-class FilePlot_plot(SimplePlot):
-    """Plot data from a file"""
-
-    def __init__(
-        self,
-        params: ParamParser,
-    ) -> None:
-        super().__init__(
-            title=params.title,
-            datapoints=params.datapoints,
-            average=params.average,
-            moving_average=params.moving_average,
-            divider=params.divider,
-        )
-
-        self.col = params.col
-        self.file_name = params.file_name
-
-        if type(params.row) is int:
-            self.row = params.row
-            return
-
-        if params.row.isnumeric():
-            self.row = int(params.row)
-        else:
-            with open(self.file_name) as file:
-                lines = [line for line in file]
-
-            for i, line in enumerate(lines):
-                if params.row in line:
-                    break
-            self.row = i + 1
-
-    def get_line_val(self, row: int, col: int) -> float:
-        """Get value from a specific row and column in a file"""
-
-        try:
-            with open(self.file_name) as file:
-                lines = file.readlines()
-        except FileNotFoundError:
-            logging.error(f"File not found: {self.file_name}")
-            return 0
-
-        line = lines[row - 1].replace("\n", "")
-        columns = line.split(" ")
-
-        # Remove empty strings
-        columns = [column for column in columns if column != ""]
-
-        try:
-            column = columns[col - 1]
-            val = float(column) / self.divider
-            logging.debug(f"{self.file_name} {val} {row} {col}")
-        except IndexError:
-            logging.error(f'Failed to get column {col} in line: "{line}" {columns}')
-            return 0
-        except ValueError:  # If value is not a number
-            logging.error(f'Failed to convert "{column}" to value, in line: "{line}"')
-            val = 0
-
-        return val
-
-    def update(self):
-        """Update plot with new value"""
-
-        val = self.get_line_val(self.row, self.col)
-        self.update_plot(val)
-
-    def __str__(self) -> str:
-        return f"FilePlot {self.file_name} {self.row} {self.col}"
-
-
 class FilePlot(SimplePlot):
     """Plot data from a file"""
 
@@ -840,7 +767,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plots.update()
 
 
-class FConf(ParamParser):
+class FConf(PlotParam):
     """Parse JSON config file"""
 
     def __init__(
@@ -860,7 +787,8 @@ class FConf(ParamParser):
 
         self.params = []
         for plotd in self.conf["plots"]:
-            params = ParamParser(
+            params = PlotParam(
+                param_string="",
                 file_name=self.get_param_conf(plotd, "file", ""),
                 cmd=self.get_param_conf(plotd, "cmd", ""),
                 title=self.get_param_conf(plotd, "title", ""),
@@ -924,13 +852,6 @@ def main() -> None:
         help="Add file plot",
         metavar="FILE:DIV:PTS:AVG@TITLE",
     )
-    parser.add_argument(
-        "--plotrc",
-        action="append",
-        default=[],
-        help="Add file plot row column",
-        metavar="FILE:ROW:COL:DIV:PTS:AVG@TITLE",
-    )
     # parser.add_argument(
     #     "--plotexec",
     #     action="append",
@@ -971,12 +892,6 @@ def main() -> None:
         help="Add CPU usage plot, all individual cores",
     )
     parser.add_argument(
-        "--paramtest",
-        action="append",
-        default=[],
-        help="Testing of new parameter parser",
-    )
-    parser.add_argument(
         "--columns",
         action="store",
         default=Def.COLUMNS,
@@ -1005,7 +920,12 @@ def main() -> None:
         help="Set update interval (ms)",
         metavar="N",
     )
-    parser.add_argument("--title", default="", type=str, help="Set window title")
+    parser.add_argument(
+        "--title", 
+        default="", 
+        type=str, 
+        help="Set window title"
+    )
     parser.add_argument(
         "--conf",
         action="append",
@@ -1078,40 +998,7 @@ def main() -> None:
             )
         )
 
-        # params = ParamParser(
-        #     param_string=plotarg,
-        #     datapoints=args.datapoints,
-        #     average=args.average,
-        # )
-        # params.plot(plotarg)
-        # print(repr(params))
-        # plot_list.add_plot(
-        #     FilePlot(
-        #         params=params,
-        #     )
-        # )
-
-    for plotarg in args.plotrc:
-        params = ParamParser(
-            param_string=plotarg,
-            average=args.average,
-            datapoints=args.datapoints,
-        )
-        params.plotrc(plotarg)
-
-        plot_list.add_plot(
-            FilePlot(
-                params=params,
-            )
-        )
-
     for plotarg in args.plotf:
-        # params = ParamParser(
-        #     param_string=plotarg,
-        #     average=args.average,
-        #     datapoints=args.datapoints,
-        # )
-        #params.plotf(plotarg)
         params = PlotParam(
             param_string=plotarg,
             datapoints=args.datapoints,
