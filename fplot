@@ -17,6 +17,7 @@ from argparse import (
     FileType,
     RawDescriptionHelpFormatter,
 )
+from copy import copy
 import json
 import logging
 import re
@@ -36,8 +37,6 @@ except ModuleNotFoundError:
     print("\n>sudo apt install python3-pyqt6")
     exit(0)
 
-# from PyQt6.QtWidgets import QPushButton
-
 try:
     import pyqtgraph as pg
 except ModuleNotFoundError:
@@ -47,7 +46,6 @@ except ModuleNotFoundError:
     print(">pip install pyqtgraph")
     exit(0)
 
-# print(psutil.cpu_percent(interval=1, percpu=True))
 
 # Absolute path to script itself
 self_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
@@ -110,10 +108,10 @@ PaletteVSCodeL = [
     rgb2str(229, 229, 229),
 ]
 
-plot_pen = pg.mkPen(color="#ff00ff", width=1)
+#plot_pen = pg.mkPen(color="#ff00ff", width=1)
+#plot_pen = pg.mkPen(color="CornflowerBlue", width=1)
 plot_pen = pg.mkPen(color=PaletteVSCodeL[9], width=1)
 axis_pen = pg.mkPen(color=PaletteVSCodeL[7], width=1)
-
 
 @dataclass
 class ParamParser:
@@ -237,6 +235,7 @@ class ParamParser:
 class PlotParam:
     """Alternative parameter parser, using single letter prefixes"""
 
+    param_string: str = ""
     file_name: str = ""
     title: str = ""
     datapoints: int = 1000
@@ -249,64 +248,91 @@ class PlotParam:
     row_name: str = ""
     pid: int = 0
     process: int = None
-    param_string: str = ""
     columns: int = 1
+    ymin: int = None
+    ymax: int = None
+    plot_color: str = ""
 
     def __post_init__(self) -> None:
-        # logging.debug(f"ParamParserA {self.param_string}")
+        logging.debug(f"PlotParam: {self.param_string}")
         self.parse(self.param_string)
+
+    def start_with(self, param: str, prefix: str) -> bool:
+        """Check if param_string starts with prefix"""
+        return param.upper().startswith(prefix.upper())
 
     def parse(self, param_string: str) -> None:
         """Parse parameters from string"""
         self.param_string = param_string
-        p = self.param_string.split("@")
+        p = self.param_string.split("#")
+        if len(p) > 1:
+            self.title = p[1]
+            logging.debug(f"Title: {self.title}")
+            
         parameters = p[0].split(":")
 
         for i, parameter in enumerate(parameters):
             if i == 0:
                 self.file_name = parameter
-                logging.debug(f"PlotParam: file_name {self.file_name}")
+                logging.debug(f"File: {self.file_name}")
 
-            elif parameter[0].upper() == "D":
+            elif self.start_with(parameter, "D"):
                 try:
                     self.divider = float(parameter[1:])
-                    logging.debug(f"PlotParam: divider {self.divider}")
+                    logging.debug(f"Divider: {self.divider}")
                 except ValueError:
                     logging.error(f"Failed to convert {parameter[1:]} to float")
 
-            elif parameter[0].upper() == "P":
+            elif self.start_with(parameter, "P"):
                 try:
                     self.datapoints = int(parameter[1:])
-                    logging.debug(f"PlotParam: datapoints {self.datapoints}")
+                    logging.debug(f"Datapoints: {self.datapoints}")
                 except ValueError:
                     logging.error(f"Failed to convert {parameter[1:]} to int")
 
-            elif parameter[0].upper() == "A":
-                if "m" in parameter:
-                    self.moving_average = True
-                else:
-                    self.moving_average = False
+            elif self.start_with(parameter, "MA"):
+                self.moving_average = True
                 try:
-                    self.average = int(parameter[1:].replace("m", ""))
-                    logging.debug(f"PlotParam: average {self.average}")
+                    self.average = int(parameter[2:])
+                    logging.debug(f"Moving average: {self.average}")
+                except ValueError:
+                    logging.error(f"Failed to convert {parameter[2:]} to int")
+
+            elif self.start_with(parameter, "A"):
+                self.moving_average = False
+                try:
+                    self.average = int(parameter[1:])
+                    logging.debug(f"Average: {self.average}")
                 except ValueError:
                     logging.error(f"Failed to convert {parameter[1:]} to int")
 
-            elif parameter[0].upper() == "R":
+            elif self.start_with(parameter, "R"):
                 try:
                     self.row = int(parameter[1:])
-                    logging.debug(f"PlotParam: row {self.row}")
+                    logging.debug(f"Row: {self.row}")
                 except ValueError:
                     self.row_name = parameter[1:]
                     logging.error(f"Failed to convert {parameter[1:]} to int")
                     if self.title == "":
                         self.title = f"{self.file_name}:{self.row_name}"
-            elif parameter[0].upper() == "C":
+            elif self.start_with(parameter, "C"):
                 try:
                     self.col = int(parameter[1:])
-                    logging.debug(f"PlotParam: col {self.col}")
+                    logging.debug(f"Column: {self.col}")
                 except ValueError:
                     logging.error(f"Failed to convert {parameter[1:]} to int")
+            elif self.start_with(parameter, "YMIN"):
+                try:
+                    self.ymin = float(parameter[4:])
+                    logging.debug(f"Y min: {self.ymin}")
+                except ValueError:
+                    logging.error(f"Failed to convert {parameter[4:]} to float")
+            elif self.start_with(parameter, "YMAX"):
+                try:
+                    self.ymax = float(parameter[4:])
+                    logging.debug(f"Y max: {self.ymax}")
+                except ValueError:
+                    logging.error(f"Failed to convert {parameter[4:]} to float")
 
 
 # @dataclass
@@ -342,22 +368,27 @@ class SimplePlot:
     def __init__(
         self,
         parent=None,
-        title: str = "",
-        datapoints: int = 1000,
-        average: int = 1,
-        moving_average: bool = False,
-        divider: int = 1,
+        params: PlotParam = None
     ):
+        self.params = params
         self.widget = pg.PlotWidget(
-            parent=parent, background="default", plotItem=None, title=title
+            parent=parent,
+            background="default",
+            plotItem=None,
+            title=self.params.title
         )
 
-        self.datapoints = datapoints
-        self.divider = divider
-        self.filter = AvgFilter(average, moving_average)
+        self.filter = AvgFilter(
+            self.params.average,
+            self.params.moving_average
+        )
 
-        self.x = list(range(self.datapoints))
-        self.y = [0 for _ in range(self.datapoints)]
+        if self.params is not None:
+            if self.params.ymin is not None and self.params.ymax is not None:
+                self.widget.setYRange(self.params.ymin, self.params.ymax)
+
+        self.x = list(range(self.params.datapoints))
+        self.y = [0 for _ in range(self.params.datapoints)]
 
         self.line = self.widget.plot(self.x, self.y, pen=plot_pen)
         # self.line2 = self.plot(self.x, self.y, pen=pen2)
@@ -423,18 +454,14 @@ class PidPlot(SimplePlot):
     def __init__(
         self,
         pid: int = 0,
-        datapoints: int = 1000,
-        divider: int = 1,
-        average: int = 1,
+        params: PlotParam = None,
     ):
         self.pid = pid
         self.process = psutil.Process(self.pid)
         self.process.name()
+        params.title = f'pid {pid} "{self.process.name()}" (%)'
         super().__init__(
-            title=f'pid {pid} "{self.process.name()}" (%)',
-            datapoints=datapoints,
-            divider=divider,
-            average=average,
+            params=params,
         )
 
     def update(self) -> None:
@@ -455,13 +482,10 @@ class CPUPlot(SimplePlot):
 
     def __init__(
         self,
-        title: str = "",
-        datapoints: int = 1000,
-        divider=1,
-        average=1,
+        params: PlotParam,
     ):
         super().__init__(
-            title=title, datapoints=datapoints, average=average, divider=divider
+            params=params
         )
 
     def update(self, value=None) -> None:
@@ -481,19 +505,15 @@ class CPUPlotI:
 
     def __init__(
         self,
-        datapoints: int = 1000,
-        divider=1,
-        average=1,
+        params: PlotParam,
     ):
-
         self.plots = []
         for x in range(psutil.cpu_count()):
+            new_param = copy(params)
+            new_param.title = f"CPU{x} (%)"
             self.plots.append(
                 CPUPlot(
-                    title=f"CPU{x} (%)",
-                    datapoints=datapoints,
-                    average=average,
-                    divider=divider,
+                    params=new_param
                 )
             )
 
@@ -515,7 +535,7 @@ class CPUPlotI:
         return "CPUPlot"
 
 
-class FilePlot(SimplePlot):
+class FilePlot_plot(SimplePlot):
     """Plot data from a file"""
 
     def __init__(
@@ -587,40 +607,106 @@ class FilePlot(SimplePlot):
         return f"FilePlot {self.file_name} {self.row} {self.col}"
 
 
-class FilePlotR(SimplePlot):
+class FilePlot(SimplePlot):
     """Plot data from a file"""
 
-    def __init__(self, params: ParamParser) -> None:
+    def __init__(
+        self,
+        params: PlotParam
+    ) -> None:
         super().__init__(
-            title=params.title,
-            datapoints=params.datapoints,
-            average=params.average,
-            divider=params.divider,
-            moving_average=params.moving_average,
+            params=params
         )
 
         self.col = params.col
         self.file_name = params.file_name
+
+        if type(params.row) is int:
+            self.row = params.row
+            return
+
+        if params.row.isnumeric():
+            self.row = int(params.row)
+        else:
+            with open(self.file_name) as file:
+                lines = [line for line in file]
+
+            for i, line in enumerate(lines):
+                if params.row in line:
+                    break
+            self.row = i + 1
+
+    def get_line_val(self, row: int, col: int) -> float:
+        """Get value from a specific row and column in a file"""
+
         try:
-            self.file = open(self.file_name)
+            with open(self.file_name) as file:
+                lines = file.readlines()
         except FileNotFoundError:
             logging.error(f"File not found: {self.file_name}")
+            return 0
+
+        line = lines[row - 1].replace("\n", "")
+        columns = line.split(" ")
+
+        # Remove empty strings
+        columns = [column for column in columns if column != ""]
+
+        try:
+            column = columns[col - 1]
+            val = float(column) / self.params.divider
+            logging.debug(f"{self.file_name} {val} {row} {col}")
+        except IndexError:
+            logging.error(f'Failed to get column {col} in line: "{line}" {columns}')
+            return 0
+        except ValueError:  # If value is not a number
+            logging.error(f'Failed to convert "{column}" to value, in line: "{line}"')
+            val = 0
+
+        return val
+
+    def update(self):
+        """Update plot with new value"""
+
+        val = self.get_line_val(self.row, self.col)
+        self.update_plot(val)
+
+    def __str__(self) -> str:
+        return f"FilePlot {self.file_name} {self.row} {self.col}"
+
+
+class FilePlotR(SimplePlot):
+    """Plot data from a file"""
+
+    def __init__(self, params: PlotParam) -> None:
+        super().__init__(
+            params=params
+        )
+        logging.debug(f"FilePlotR: {params.file_name} {params.col}")
+
+        self.params = params
+        #self.col = params.col
+        #self.file_name = params.file_name
+        try:
+            self.file = open(self.params.file_name)
+        except FileNotFoundError:
+            logging.error(f"File not found: {self.params.file_name}")
             self.file = None
 
     def get_line_val(self, col: int) -> float:
         """Get value from a specific row and column in a file"""
 
         if self.file is None:
-            logging.error(f"File not found: {self.file_name}")
+            logging.error(f"File not found: {self.params.file_name}")
             return 0
 
         try:
             line = self.file.readline()
         except FileNotFoundError:
-            logging.error(f"File not found: {self.file_name}")
+            logging.error(f"File not found: {self.params.file_name}")
             return 0
         except EOFError:
-            logging.error(f"End of file: {self.file_name}")
+            logging.error(f"End of file: {self.params.file_name}")
             return 0
 
         if line == "":
@@ -631,8 +717,8 @@ class FilePlotR(SimplePlot):
         columns = [column for column in columns if column != ""]
         try:
             column = columns[col - 1]
-            val = float(column) / self.divider
-            logging.debug(f"{self.file_name} {val} {col}")
+            val = float(column) / self.params.divider
+            logging.debug(f"{self.params.file_name} {val} {self.params.col}")
         except IndexError:
             logging.error(f'Failed to get column {col} in line: "{line}" {columns}')
             val = 0
@@ -644,11 +730,11 @@ class FilePlotR(SimplePlot):
     def update(self):
         """Update plot with new value"""
 
-        val = self.get_line_val(self.col)
+        val = self.get_line_val(self.params.col)
         self.update_plot(val)
 
     def __str__(self) -> str:
-        return f"FilePlot {self.file_name} {self.row} {self.col}"
+        return f"FilePlot {self.params.file_name} {self.params.row} {self.params.col}"
 
 
 class ProcessPlot(SimplePlot):
@@ -981,18 +1067,29 @@ def main() -> None:
             plot_list.add_plot(file_plot)
 
     for plotarg in args.plot:
-        params = ParamParser(
+        params = PlotParam(
             param_string=plotarg,
             datapoints=args.datapoints,
-            average=args.average,
+            average=args.average
         )
-        params.plot(plotarg)
-        print(repr(params))
         plot_list.add_plot(
             FilePlot(
                 params=params,
             )
         )
+
+        # params = ParamParser(
+        #     param_string=plotarg,
+        #     datapoints=args.datapoints,
+        #     average=args.average,
+        # )
+        # params.plot(plotarg)
+        # print(repr(params))
+        # plot_list.add_plot(
+        #     FilePlot(
+        #         params=params,
+        #     )
+        # )
 
     for plotarg in args.plotrc:
         params = ParamParser(
@@ -1009,12 +1106,17 @@ def main() -> None:
         )
 
     for plotarg in args.plotf:
-        params = ParamParser(
+        # params = ParamParser(
+        #     param_string=plotarg,
+        #     average=args.average,
+        #     datapoints=args.datapoints,
+        # )
+        #params.plotf(plotarg)
+        params = PlotParam(
             param_string=plotarg,
-            average=args.average,
             datapoints=args.datapoints,
+            average=args.average
         )
-        params.plotf(plotarg)
         plot_list.add_plot(FilePlotR(params=params))
 
     # for plotarg in args.plotexec:
@@ -1039,17 +1141,27 @@ def main() -> None:
     #     plot_list.append(file_plot)
     #     logging.debug(file_plot)
 
-    for param in args.paramtest:
-        params = PlotParam(param_string=param)
-        logging.debug(f"param: {params}")
-        sys.exit(0)
+    # for param in args.paramtest:
+    #     #logging.basicConfig(format=logging_format, level=logging.DEBUG)
+    #     params = PlotParam(param_string=param)
+
+    #     logging.debug(f"param: {params}")
+    #     sys.exit(0)
 
     for pid in args.plotpid:
-        if psutil.pid_exists(int(pid)) is False:
-            logging.error(f"PID {pid} does not exist")
+        params = PlotParam(
+            param_string=pid,
+            datapoints=args.datapoints,
+            average=args.average,
+            ymin=0,
+            ymax=100,
+        )
+
+        if psutil.pid_exists(int(params.file_name)) is False:
+            logging.error(f"PID {params.file_name} does not exist")
             continue
         plot_list.add_plot(
-            PidPlot(pid=int(pid), datapoints=args.datapoints, average=args.average)
+            PidPlot(pid=int(params.file_name), params=params)
         )
 
     # for proc in args.process:
@@ -1071,15 +1183,28 @@ def main() -> None:
     #     plots.append(file_plot)
 
     if args.plotcpu:
+        params = PlotParam(
+            title="CPU (%)",
+            datapoints=args.datapoints,
+            average=args.average,
+            ymin=0,
+            ymax=100,
+        )
         plot_list.add_plot(
-            CPUPlot(title="CPU (%)", datapoints=args.datapoints, average=args.average)
+            CPUPlot(params=params)
         )
 
     if args.plotcpui:
+        params = PlotParam(
+            title="CPU (%)",
+            datapoints=args.datapoints,
+            average=args.average,
+            ymin=0,
+            ymax=100,
+        )
         plot_list.add_plot(
             CPUPlotI(
-                datapoints=args.datapoints,
-                average=args.average,
+                params=params
             )
         )
 

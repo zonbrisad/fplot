@@ -162,7 +162,7 @@ Fplot supports plot configurations in json files.
 - [ ] Support gpio
 - [ ] Colors
 - [ ] guide lines in graphs
-- [ ] multiple plots in graphs
+- [ ] multiple plots in a single graph
 - [x] averaging
 - [ ] save/recover data
 - [ ] screenshot button
@@ -177,6 +177,7 @@ Fplot supports plot configurations in json files.
 - [ ] Automatic detection of file type
 - [ ] Individual timer for all plots
 - [ ] Derived plots, plots based on other plots, downsampling, average, derivation
+- [ ] Ability to set fixed plot min/max limits
 - [x] Invividual plot Title
 
 ## Suggestions
@@ -204,6 +205,10 @@ Each paramter value has a single letter prefix followed by a value. This means t
  M - Multiplier
  P - Datapoints
  F - Filter
+ ymin - y axis minimum value
+ ymax - y axis maximum value
+ C - plot color
+
 
  Alt. 
 
