@@ -108,9 +108,10 @@ PaletteVSCodeL = [
     rgb2str(229, 229, 229),
 ]
 
+default_plot_color = PaletteVSCodeL[9]
 #plot_pen = pg.mkPen(color="#ff00ff", width=1)
 #plot_pen = pg.mkPen(color="CornflowerBlue", width=1)
-plot_pen = pg.mkPen(color=PaletteVSCodeL[9], width=1)
+#default_plot_pen = pg.mkPen(color=default_plot_color, width=1)
 axis_pen = pg.mkPen(color=PaletteVSCodeL[7], width=1)
 
 # @dataclass
@@ -251,7 +252,7 @@ class PlotParam:
     columns: int = 1
     ymin: int = None
     ymax: int = None
-    plot_color: str = ""
+    plot_color: str = default_plot_color
 
     def __post_init__(self) -> None:
         logging.debug(f"PlotParam: {self.param_string}")
@@ -282,6 +283,10 @@ class PlotParam:
                     logging.debug(f"Divider: {self.divider}")
                 except ValueError:
                     logging.error(f"Failed to convert {parameter[1:]} to float")
+
+            elif self.start_with(parameter, "PC"):
+                self.plot_color = parameter[2:]
+                logging.debug(f"Plot color: {self.plot_color}")
 
             elif self.start_with(parameter, "P"):
                 try:
@@ -390,7 +395,9 @@ class SimplePlot:
         self.x = list(range(self.params.datapoints))
         self.y = [0 for _ in range(self.params.datapoints)]
 
-        self.line = self.widget.plot(self.x, self.y, pen=plot_pen)
+        pen = pg.mkPen(color=self.params.plot_color, width=1)
+        self.line = self.widget.plot(self.x, self.y, pen=pen)
+        #self.line = self.widget.plot(self.x, self.y, pen=self.params.plot_color)
         # self.line2 = self.plot(self.x, self.y, pen=pen2)
 
         self.widget.getAxis("bottom").setPen(axis_pen)
