@@ -359,6 +359,7 @@ class SimplePlot:
         """Update plot with new value"""
 
         if new_val is None:
+            self.last_value = None
             return
 
         val = self.filter.update(new_val)
@@ -612,7 +613,7 @@ class FilePlot(SimplePlot):
             column = columns[col - 1]
             val = float(column) / self.params.divider
             logging.debug(f"{self.params.file_name} {val} {self.params.col}")
-            print("Value:", val)
+            #print("Value:", val)
         except IndexError:
             logging.error(f'Failed to get column {col} in line: "{line}" {columns}')
             val = 0
@@ -865,7 +866,7 @@ Examples:\n
 
 def main() -> None:
     logging_format = "[%(levelname)s] %(lineno)d %(funcName)s() : %(message)s"
-    logging.basicConfig(format=logging_format, level=logging.DEBUG)
+    #logging.basicConfig(format=logging_format, level=logging.DEBUG)
     parser = ArgumentParser(
         prog=App.NAME,
         description=App.DESCRIPTION,
