@@ -7,7 +7,7 @@
    viewBox="0 0 210 297"
    version="1.1"
    id="svg1"
-   inkscape:version="1.4 (1:1.4+202410161351+e7c3feb100)"
+   inkscape:version="1.4.2 (1:1.4.2+202505120737+ebf0e940d0)"
    sodipodi:docname="fplot.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -24,9 +24,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="0.71488496"
-     inkscape:cx="804.32522"
-     inkscape:cy="633.66839"
+     inkscape:zoom="5.7190797"
+     inkscape:cx="2031.4457"
+     inkscape:cy="550.08851"
      inkscape:window-width="2560"
      inkscape:window-height="1408"
      inkscape:window-x="1920"
@@ -53,9 +53,40 @@
        id="page18"
        margin="0"
        bleed="0" />
+    <inkscape:page
+       x="440"
+       y="0"
+       width="210"
+       height="297"
+       id="page1"
+       margin="0"
+       bleed="0" />
+    <inkscape:page
+       x="311.42844"
+       y="347.02028"
+       width="0"
+       height="3.1404551"
+       id="page2" />
   </sodipodi:namedview>
   <defs
      id="defs1">
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect18"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,0,0,1 @ F,0,1,1,0,1.1901476,0,1 @ F,0,0,1,0,1.1901476,0,1 @ F,0,0,1,0,0,0,1"
+       radius="0"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
     <inkscape:path-effect
        effect="fillet_chamfer"
        id="path-effect71"
@@ -375,7 +406,7 @@
        xlink:href="#linearGradient21"
        id="linearGradient67"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="translate(144.0364,-122.46119)"
+       gradientTransform="translate(140.00932,-124.46021)"
        x1="181.78175"
        y1="286.38028"
        x2="181.78175"
@@ -386,6 +417,16 @@
        id="linearGradient71"
        gradientUnits="userSpaceOnUse"
        gradientTransform="translate(3.1586407,7.5654339)"
+       x1="181.78175"
+       y1="286.38028"
+       x2="181.78175"
+       y2="248.77545" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient21"
+       id="linearGradient18"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(362.82143,-122.46119)"
        x1="181.78175"
        y1="286.38028"
        x2="181.78175"
@@ -879,20 +920,20 @@
        id="rect63"
        width="37.478924"
        height="37.478924"
-       x="306.92303"
-       y="126.28365"
+       x="302.89594"
+       y="124.28464"
        rx="4.9217234"
        ry="4.9217234"
        inkscape:export-filename="fplot_128x128.png"
        inkscape:export-xdpi="86.1726"
        inkscape:export-ydpi="86.1726" />
     <path
-       style="opacity:0.566203;fill:#000000;fill-opacity:0;stroke:#00c179;stroke-width:0.45;stroke-linejoin:round;stroke-miterlimit:4.4;stroke-dasharray:none;stroke-opacity:0.699754;marker-end:url(#ConcaveTriangle)"
-       d="m 310.53897,154.57999 h 29.50408"
+       style="opacity:0.774006;fill:#000000;fill-opacity:0;stroke:#00c179;stroke-width:0.45;stroke-linejoin:round;stroke-miterlimit:4.4;stroke-dasharray:none;stroke-opacity:0.887717;marker-end:url(#ConcaveTriangle)"
+       d="m 306.51189,152.58097 h 29.50408"
        id="path63" />
     <path
-       style="opacity:0.566203;fill:#000000;fill-opacity:0;stroke:#00c179;stroke-width:0.45;stroke-linejoin:round;stroke-miterlimit:4.4;stroke-dasharray:none;stroke-opacity:0.699754;marker-end:url(#ConcaveTriangle)"
-       d="M 314.69729,158.24617 V 130.17184"
+       style="opacity:0.774006;fill:#000000;fill-opacity:0;stroke:#00c179;stroke-width:0.45;stroke-linejoin:round;stroke-miterlimit:4.4;stroke-dasharray:none;stroke-opacity:0.887717;marker-end:url(#ConcaveTriangle)"
+       d="M 310.67021,156.24715 V 128.17282"
        id="path64"
        sodipodi:nodetypes="cc" />
     <path
@@ -902,11 +943,11 @@
        sodipodi:nodetypes="cccc"
        inkscape:path-effect="#path-effect67"
        inkscape:original-d="m 236.05872,150.87744 6.10856,-13.90958 7.82602,9.11371 6.75516,-17.54171"
-       transform="translate(79.809139,5.3203718)" />
+       transform="translate(75.78206,3.3213544)" />
     <path
        id="path66"
        style="fill:none;fill-opacity:0;stroke:#009af3;stroke-width:1.65;stroke-linejoin:round;stroke-miterlimit:4.4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 322.07729,156.9174 v 2.95021 h -11.08533 v -2.95021"
+       d="m 318.05021,154.91838 v 2.95021 h -11.08533 v -2.95021"
        sodipodi:nodetypes="cccc" />
     <rect
        style="opacity:1;fill:url(#linearGradient71);stroke:#000000;stroke-width:0.25;stroke-linejoin:round;stroke-dasharray:none;paint-order:fill markers stroke"
@@ -941,6 +982,46 @@
        id="path70"
        style="fill:none;fill-opacity:0;stroke:#009af3;stroke-width:1.65;stroke-linejoin:round;stroke-miterlimit:4.4;stroke-dasharray:none;stroke-opacity:1"
        d="m 181.19952,286.94402 v 2.95021 h -11.08533 v -2.95021"
+       sodipodi:nodetypes="cccc" />
+    <path
+       style="fill:none;stroke:#ffcc00;stroke-width:0.294208;stroke-opacity:1"
+       d="m 14.261715,177.10987 c 0,0 12.798657,32.1711 25.384232,32.1711 12.585573,0 12.798659,-32.1711 25.384232,-32.1711 12.585573,0 12.798659,32.1711 25.384232,32.1711 12.585579,0 12.798659,-32.1711 25.384239,-32.1711 12.58557,0 25.38423,32.1711 25.38423,32.1711"
+       id="path1"
+       sodipodi:nodetypes="czzzzc" />
+    <rect
+       style="opacity:1;fill:url(#linearGradient18);stroke:#000000;stroke-width:0.25;stroke-linejoin:round;stroke-dasharray:none;paint-order:fill markers stroke"
+       id="rect2"
+       width="37.478924"
+       height="37.478924"
+       x="525.70807"
+       y="126.28365"
+       rx="4.9217234"
+       ry="4.9217234"
+       inkscape:export-filename="fplot2_128x128.png"
+       inkscape:export-xdpi="86.1726"
+       inkscape:export-ydpi="86.1726" />
+    <path
+       style="opacity:1;fill:none;stroke:#ffcc00;stroke-width:0.95;stroke-linejoin:round;stroke-dasharray:none;marker-end:url(#marker14);paint-order:fill markers stroke"
+       d="m 239.4822,150.46107 6.6918,-12.17269 a 0.77372986,0.77372986 175.7709 0 1 1.29386,-0.0957 l 4.4882,5.90067 a 0.67126318,0.67126318 172.16622 0 0 1.15844,-0.15938 l 6.64107,-16.78204"
+       id="path16"
+       sodipodi:nodetypes="cccc"
+       inkscape:path-effect="#path-effect18"
+       inkscape:original-d="m 239.4822,150.46107 7.26514,-13.21563 5.92923,7.79521 7.079,-17.88869"
+       transform="translate(295.11087,5.8559693)" />
+    <path
+       style="opacity:0.769494;fill:#000000;fill-opacity:0;stroke:#00c179;stroke-width:0.94;stroke-linejoin:round;stroke-miterlimit:4.4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker14)"
+       d="m 528.30621,154.57999 h 28.69987"
+       id="path13"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="opacity:0.769494;fill:#000000;fill-opacity:0;stroke:#00c179;stroke-width:0.916;stroke-linejoin:round;stroke-miterlimit:4.4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker14)"
+       d="M 533.48232,158.24617 V 132.62696"
+       id="path15"
+       sodipodi:nodetypes="cc" />
+    <path
+       id="path17"
+       style="fill:none;fill-opacity:0;stroke:#009af3;stroke-width:1.65;stroke-linejoin:round;stroke-miterlimit:4.4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 539.89079,157.47256 v 2.95021 h -11.08533 v -2.95021"
        sodipodi:nodetypes="cccc" />
   </g>
 </svg>

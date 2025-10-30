@@ -63,7 +63,7 @@ class App:
     EMAIL = "<peter.malmberg@gmail.com>"
     ORG = ""
     HOME = ""
-    ICON = f"{self_dir}/icon/fplot_128x128.png"
+    ICON = f"{self_dir}/icon/fplot2_128x128.png"
 
 
 class Def:
