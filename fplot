@@ -178,6 +178,7 @@ PaletteVSCodeL = [
 default_plot_color = PaletteVSCodeL[9]
 axis_pen = pg.mkPen(color=PaletteVSCodeL[7], width=1)
 
+
 @dataclass
 class PlotParam:
     """Alternative parameter parser, using single letter prefixes"""
@@ -381,12 +382,12 @@ class SimplePlot:
 
 
 class DerivedPlot(SimplePlot):
-    
-    def __init__(self, parent=None, params = None, source = None):
+
+    def __init__(self, parent=None, params=None, source=None):
         super().__init__(parent, params)
         self.source = source
         self.params = params
-        
+
     def update(self) -> None:
         """Update plot with new value"""
         self.update_plot(self.source.last_value)
@@ -514,7 +515,7 @@ class SysPlot(SimplePlot):
         super().__init__(
             params=params
         )
-        #print(f"Sysplot: {params.file_name} {params.row} {params.col}")
+        # print(f"Sysplot: {params.file_name} {params.row} {params.col}")
         self.col = params.col
         self.file_name = params.file_name
 
@@ -958,7 +959,10 @@ def main() -> None:
         metavar="FILE",
     )
     parser.add_argument(
-        "--debug", action="store_true", default=False, help="Print debug messages"
+        "--debug",
+        action="store_true",
+        default=False,
+        help="Print debug messages"
     )
     parser.add_argument(
         "--version",
