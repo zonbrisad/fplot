@@ -52,6 +52,72 @@ except ModuleNotFoundError:
 self_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
 
 
+html_colors = {
+    "AliceBlue": "#F0F8FF", "AntiqueWhite": "#FAEBD7", "Aqua": "#00FFFF", 
+    "Aquamarine": "#7FFFD4", "Azure": "#F0FFFF",
+    "Beige": "#F5F5DC", "Bisque": "#FFE4C4", "Black": "#000000", 
+    "BlanchedAlmond": "#FFEBCD", "Blue": "#0000FF",
+    "BlueViolet": "#8A2BE2", "Brown": "#A52A2A", "BurlyWood": "#DEB887", 
+    "CadetBlue": "#5F9EA0", "Chartreuse": "#7FFF00",
+    "Chocolate": "#D2691E", "Coral": "#FF7F50", "CornflowerBlue": "#6495ED", 
+    "Cornsilk": "#FFF8DC", "Crimson": "#DC143C",
+    "Cyan": "#00FFFF", "DarkBlue": "#00008B", "DarkCyan": "#008B8B", 
+    "DarkGoldenRod": "#B8860B", "DarkGray": "#A9A9A9",
+    "DarkGrey": "#A9A9A9", "DarkGreen": "#006400", "DarkKhaki": "#BDB76B", 
+    "DarkMagenta": "#8B008B", "DarkOliveGreen": "#556B2F",
+    "DarkOrange": "#FF8C00", "DarkOrchid": "#9932CC", "DarkRed": "#8B0000", 
+    "DarkSalmon": "#E9967A", "DarkSeaGreen": "#8FBC8F",
+    "DarkSlateBlue": "#483D8B", "DarkSlateGray": "#2F4F4F", 
+    "DarkSlateGrey": "#2F4F4F", "DarkTurquoise": "#00CED1", 
+    "DarkViolet": "#9400D3",
+    "DeepPink": "#FF1493", "DeepSkyBlue": "#00BFFF", "DimGray": "#696969",
+    "DimGrey": "#696969", "DodgerBlue": "#1E90FF",
+    "FireBrick": "#B22222", "FloralWhite": "#FFFAF0", "ForestGreen": "#228B22", 
+    "Fuchsia": "#FF00FF", "Gainsboro": "#DCDCDC",
+    "GhostWhite": "#F8F8FF", "Gold": "#FFD700", "GoldenRod": "#DAA520", 
+    "Gray": "#808080", "Grey": "#808080",
+    "Green": "#008000", "GreenYellow": "#ADFF2F", "HoneyDew": "#F0FFF0",
+    "HotPink": "#FF69B4", "IndianRed": "#CD5C5C",
+    "Indigo": "#4B0082", "Ivory": "#FFFFF0", "Khaki": "#F0E68C", 
+    "Lavender": "#E6E6FA", "LavenderBlush": "#FFF0F5",
+    "LawnGreen": "#7CFC00", "LemonChiffon": "#FFFACD", "LightBlue": "#ADD8E6", 
+    "LightCoral": "#F08080", "LightCyan": "#E0FFFF",
+    "LightGoldenRodYellow": "#FAFAD2", "LightGray": "#D3D3D3", 
+    "LightGrey": "#D3D3D3", "LightGreen": "#90EE90", "LightPink": "#FFB6C1",
+    "LightSalmon": "#FFA07A", "LightSeaGreen": "#20B2AA", 
+    "LightSkyBlue": "#87CEFA", "LightSlateGray": "#778899", 
+    "LightSlateGrey": "#778899",
+    "LightSteelBlue": "#B0C4DE", "LightYellow": "#FFFFE0", "Lime": "#00FF00", 
+    "LimeGreen": "#32CD32", "Linen": "#FAF0E6",
+    "Magenta": "#FF00FF", "Maroon": "#800000", "MediumAquaMarine": "#66CDAA",
+    "MediumBlue": "#0000CD", "MediumOrchid": "#BA55D3",
+    "MediumPurple": "#9370DB", "MediumSeaGreen": "#3CB371", 
+    "MediumSlateBlue": "#7B68EE", "MediumSpringGreen": "#00FA9A",
+    "MediumTurquoise": "#48D1CC",
+    "MediumVioletRed": "#C71585", "MidnightBlue": "#191970", 
+    "MintCream": "#F5FFFA", "MistyRose": "#FFE4E1", "Moccasin": "#FFE4B5",
+    "NavajoWhite": "#FFDEAD", "Navy": "#000080", "OldLace": "#FDF5E6", 
+    "Olive": "#808000", "OliveDrab": "#6B8E23",
+    "Orange": "#FFA500", "OrangeRed": "#FF4500", "Orchid": "#DA70D6", 
+    "PaleGoldenRod": "#EEE8AA", "PaleGreen": "#98FB98",
+    "PaleTurquoise": "#AFEEEE", "PaleVioletRed": "#DB7093", 
+    "PapayaWhip": "#FFEFD5", "PeachPuff": "#FFDAB9", "Peru": "#CD853F",
+    "Pink": "#FFC0CB", "Plum": "#DDA0DD", "PowderBlue": "#B0E0E6", 
+    "Purple": "#800080", "RebeccaPurple": "#663399",
+    "Red": "#FF0000", "RosyBrown": "#BC8F8F", "RoyalBlue": "#4169E1", 
+    "SaddleBrown": "#8B4513", "Salmon": "#FA8072",
+    "SandyBrown": "#F4A460", "SeaGreen": "#2E8B57", "SeaShell": "#FFF5EE", 
+    "Sienna": "#A0522D", "Silver": "#C0C0C0",
+    "SkyBlue": "#87CEEB", "SlateBlue": "#6A5ACD", "SlateGray": "#708090", 
+    "SlateGrey": "#708090", "Snow": "#FFFAFA",
+    "SpringGreen": "#00FF7F", "SteelBlue": "#4682B4", "Tan": "#D2B48C", 
+    "Teal": "#008080", "Thistle": "#D8BFD8",
+    "Tomato": "#FF6347", "Turquoise": "#40E0D0", "Violet": "#EE82EE", 
+    "Wheat": "#F5DEB3", "White": "#FFFFFF",
+    "WhiteSmoke": "#F5F5F5", "Yellow": "#FFFF00", "YellowGreen": "#9ACD32"
+}
+
+
 class App:
     NAME = "fplot"
     VERSION = "0.2"
@@ -288,13 +354,13 @@ class SimplePlot:
 
         # self.setLabel("left", "aaa")
         # self.setLabel("bottom", "bbb")
-        
+
     def update_plot(self, new_val: float) -> None:
         """Update plot with new value"""
-        
+
         if new_val is None:
             return
-        
+
         val = self.filter.update(new_val)
 
         self.last_value = val
@@ -323,6 +389,7 @@ class DerivedPlot(SimplePlot):
     def update(self) -> None:
         """Update plot with new value"""
         self.update_plot(self.source.last_value)
+
 
 class Plots:
     def __init__(self):
@@ -435,6 +502,7 @@ class CPUPlotI:
     def __str__(self) -> str:
         return "CPUPlot"
 
+
 class SysPlot(SimplePlot):
     """Plot data from file in /proc or /sys"""
 
@@ -445,7 +513,7 @@ class SysPlot(SimplePlot):
         super().__init__(
             params=params
         )
-        print(f"FilePlot: {params.file_name} {params.row} {params.col}")
+        #print(f"Sysplot: {params.file_name} {params.row} {params.col}")
         self.col = params.col
         self.file_name = params.file_name
 
@@ -500,7 +568,7 @@ class SysPlot(SimplePlot):
         self.update_plot(val)
 
     def __str__(self) -> str:
-        return f"FilePlot {self.file_name} {self.row} {self.col}"
+        return f"Sysplot {self.file_name} {self.row} {self.col}"
 
 
 class FilePlot(SimplePlot):
@@ -510,13 +578,10 @@ class FilePlot(SimplePlot):
         super().__init__(
             params=params
         )
-        logging.debug(f"FilePlotR: {params.file_name} {params.col}")
-
         self.params = params
-        #self.col = params.col
-        #self.file_name = params.file_name
+        #logging.debug(f"FilePlot: {params.file_name} {params.col}")
         try:
-            self.file = open(self.params.file_name)
+            self.file = open(self.params.file_name, "r")
         except FileNotFoundError:
             logging.error(f"File not found: {self.params.file_name}")
             self.file = None
@@ -525,20 +590,20 @@ class FilePlot(SimplePlot):
         """Get value from a specific row and column in a file"""
 
         if self.file is None:
-            logging.error(f"File not found: {self.params.file_name}")
-            return 0
+            print("File is None")
+            return None
 
         try:
             line = self.file.readline()
         except FileNotFoundError:
             logging.error(f"File not found: {self.params.file_name}")
-            return 0
-        except EOFError:
-            logging.error(f"End of file: {self.params.file_name}")
-            return 0
+            return None
+        except ValueError:
+            return None
 
         if line == "":
-            return 0
+            self.file.close()
+            return None
 
         columns = line.split(" ")
         # Remove empty strings
@@ -547,15 +612,18 @@ class FilePlot(SimplePlot):
             column = columns[col - 1]
             val = float(column) / self.params.divider
             logging.debug(f"{self.params.file_name} {val} {self.params.col}")
+            print("Value:", val)
         except IndexError:
             logging.error(f'Failed to get column {col} in line: "{line}" {columns}')
             val = 0
+            print("IndexError")
         except ValueError:  # If value is not a number
             logging.error(f'Failed to convert "{column}" to value, in line: "{line}"')
-            val = 0
+            val = None
+            print("ValueError")
         return val
 
-    def update(self):
+    def update(self) -> None:
         """Update plot with new value"""
 
         val = self.get_line_val(self.params.col)
@@ -761,11 +829,10 @@ class CustomAction(Action):
             params.ymax = 100
             plot_list.add_plot(
                 CPUPlot(params=params)
-                )
+            )
 
-        print(f"Dest: {self.dest} Values: {values}")
+        logging.debug(f"Dest: {self.dest} Values: {values}")
         dest = getattr(namespace, self.dest)
-        #dest.append(params)
         params_order.append(params)
         setattr(namespace, self.dest, dest)
 
@@ -776,28 +843,29 @@ src:params#"My title"
 
 Plot parameters:
   src     Filename or pid number of process to plot
-          . = derive from previous plot
-  DIV     Divisor, with wich to divide the datavalues
-  PTS     Number of data points in plot
-  AVG     Filter, 1 = no filtering, XX = XX point average, mXX = XX point moving average
-  @TITLE  Title text of plot
-  ROW     Row in file
-  COL     Column in file
+  Dxx     Set divisor, with wich to divide the datavalues
+  Pxx     Set number of datapoints in plot
+  Axx     Add an averaging filter, XX = points
+  Mxx     Add a moving average filter, XX = points
+  Rxx     Row in file
+  Cxx     Column in file
   YMIN    Minimum Y axis value
   YMAX    Maximum Y axis value
-    
-    
+  #TITLE  Title text of plot
+
+
 Examples:\n
 
-> fplot --plot /sys/class/hwmon/hwmon0/temp1_input:1000
-> fplot --plotrc /proc/meminfo:MemFree:2:1000:1
-> fplot --plotrc /proc/meminfo:2:2:1000
+> fplot --plot /sys/class/hwmon/hwmon0/temp1_input:d1000#"CPU Temp"
+> fplot --plot /proc/meminfo:r2:c2:d1024#"Free Memory (MB)"
+> fplot --plotpid 1234#"Process CPU time (%)"
+> fplot --plotcpu#"Total CPU (%)"
 """
 
 
 def main() -> None:
     logging_format = "[%(levelname)s] %(lineno)d %(funcName)s() : %(message)s"
-
+    logging.basicConfig(format=logging_format, level=logging.DEBUG)
     parser = ArgumentParser(
         prog=App.NAME,
         description=App.DESCRIPTION,
@@ -905,8 +973,6 @@ def main() -> None:
         logging.basicConfig(format=logging_format)
 
     # app = QtWidgets.QApplication(sys.argv)
-
-    # plot_list = Plots()
 
     # Handle plot setup files
     for config_file in args.conf:

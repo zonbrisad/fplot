@@ -159,9 +159,8 @@ Fplot supports plot configurations in json files.
 ## ToDo
 
 - [x] icon
-- [ ] Support gpio
-- [ ] Colors
-- [ ] guide lines in graphs
+- [x] Colors
+- [ ] guide lines in graph
 - [ ] multiple plots in a single graph
 - [x] averaging
 - [ ] save/recover data
@@ -171,16 +170,21 @@ Fplot supports plot configurations in json files.
 - [ ] arithmetics
 - [ ] counting
 - [ ] integrating
-- [ ] finding min/max
 - [ ] Add: option to generate template config file
 - [ ] Add: Local directory for storage of userdefined config scripts ~/.config/fplot
 - [ ] Automatic detection of file type
-- [ ] Individual timer for all plots
-- [ ] Derived plots, plots based on other plots, downsampling, average, derivation
-- [ ] Ability to set fixed plot min/max limits
+- [x] Derived plots, plots based on other plots, downsampling, average, derivation
+- [x] Ability to set fixed plot min/max limits
 - [x] Invividual plot Title
 
 ## Suggestions
+
+- [ ] Support gpio
+- [ ] Remove --plotcpu and replace it with --plot cpu
+- [ ] Make a number of kernel data available as "files" via --plot 
+- [ ] Remove --plotpid and use --plot pid, --plot option will assume that a number is a pid
+- [ ] Individual timer for all plots
+- [ ] finding min/max
 
 ### Alternative plot parameter system
 
@@ -207,7 +211,7 @@ Each paramter value has a single letter prefix followed by a value. This means t
  F - Filter
  ymin - y axis minimum value
  ymax - y axis maximum value
- C - plot color
+ PC - plot color
 
 
  Alt. 
