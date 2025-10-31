@@ -29,7 +29,7 @@ from dataclasses import dataclass
 import math
 from typing import Any, Protocol
 import psutil
-from escape import Ansi, html_to_rgb
+from escape import Ansi, print_html_colors
 
 try:
     from PyQt6 import QtCore, QtWidgets
@@ -1005,25 +1005,7 @@ def main() -> None:
     #     )
 
     if args.colors:
-        print("Html colors:")
-        htb = list(html_to_rgb.items())
-        for x in range(0, len(htb)//4):
-            color1, hex_value1 = htb[x]
-            r1, g1, b1 = hex_value1
-            print(f"{color1:21} {Ansi.bg_24bit_color(r1, g1, b1)}       {Ansi.RESET}  ", end="")
-
-            color2, hex_value2 = htb[x + 37]
-            r2, g2, b2 = hex_value2
-            print(f"{color2:21} {Ansi.bg_24bit_color(r2, g2, b2)}       {Ansi.RESET}  ", end="")
-
-            color3, hex_value3 = htb[x + 74]
-            r3, g3, b3 = hex_value3
-            print(f"{color3:21} {Ansi.bg_24bit_color(r3, g3, b3)}       {Ansi.RESET}  ", end="")
-
-            color4, hex_value4 = htb[x + 111]
-            r4, g4, b4 = hex_value4
-            print(f"{color4:21} {Ansi.bg_24bit_color(r4, g4, b4)}       {Ansi.RESET}")
-
+        print_html_colors()
         return 0
     
     if len(plot_list.plots) == 0:
