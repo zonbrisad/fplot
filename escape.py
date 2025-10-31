@@ -295,7 +295,6 @@ html_to_rgb = {
     "FireBrick": (0xB2, 0x22, 0x22),
     "Crimson": (0xDC, 0x14, 0x3C),
     "Red": (0xFF, 0x00, 0x00),
-    "OrangeRed": (0xFF, 0x45, 0x00),
     "Tomato": (0xFF, 0x63, 0x47),
 
     "LightSalmon": (0xFF, 0xA0, 0x7A),
@@ -305,6 +304,7 @@ html_to_rgb = {
     "Salmon": (0xFA, 0x80, 0x72),
     "Coral": (0xFF, 0x7F, 0x50),
 
+    "OrangeRed": (0xFF, 0x45, 0x00),
     "DarkOrange": (0xFF, 0x8C, 0x00),
     "Orange": (0xFF, 0xA5, 0x00),
     "Yellow": (0xFF, 0xFF, 0x00),
@@ -352,22 +352,26 @@ def print_html_colors() -> None:
     """Print all HTML colors to the terminal using ANSI escape codes."""
 
     htb = list(html_to_rgb.items())
-    for x in range(0, len(htb)//4):
+    step = 37
+    for x in range(0, step):
         color1, hex_value1 = htb[x]
         r1, g1, b1 = hex_value1
         print(f"{Ansi.bg_24bit_color(r1, g1, b1)}       {Ansi.RESET}  {color1:21} ", end="")
 
-        color2, hex_value2 = htb[x + 37]
+        color2, hex_value2 = htb[x + step]
         r2, g2, b2 = hex_value2
         print(f"{Ansi.bg_24bit_color(r2, g2, b2)}       {Ansi.RESET}  {color2:21} ", end="")
 
-        color3, hex_value3 = htb[x + 74]
+        color3, hex_value3 = htb[x + step * 2]
         r3, g3, b3 = hex_value3
         print(f"{Ansi.bg_24bit_color(r3, g3, b3)}       {Ansi.RESET}  {color3:21} ", end="")
 
-        color4, hex_value4 = htb[x + 111]
-        r4, g4, b4 = hex_value4
-        print(f"{Ansi.bg_24bit_color(r4, g4, b4)}       {Ansi.RESET}  {color4:21}")
+        try:
+            color4, hex_value4 = htb[x + step * 3]
+            r4, g4, b4 = hex_value4
+            print(f"{Ansi.bg_24bit_color(r4, g4, b4)}       {Ansi.RESET}  {color4:21}")
+        except IndexError:
+            print()
 
 
 class Ascii:
@@ -379,7 +383,7 @@ class Ascii:
     ENQ = "\x05"  # Enquiry
     ACK = "\x06"  # Acknowledge
     BEL = "\x07"  # Bell, Alert
-    BS = "\x08"  # Backspace
+    BS = "\x08"   # Backspace
     TAB = "\x09"
     LF = "\x0a"
     VT = "\x0b"
