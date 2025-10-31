@@ -347,6 +347,7 @@ html_to_rgb = {
     "HoneyDew": (0xF0, 0xFF, 0xF0),
 }
 
+
 def print_html_colors() -> None:
     """Print all HTML colors to the terminal using ANSI escape codes."""
 
@@ -367,6 +368,7 @@ def print_html_colors() -> None:
         color4, hex_value4 = htb[x + 111]
         r4, g4, b4 = hex_value4
         print(f"{Ansi.bg_24bit_color(r4, g4, b4)}       {Ansi.RESET}  {color4:21}")
+
 
 class Ascii:
     NUL = "\x00"  # Null character

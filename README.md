@@ -176,6 +176,7 @@ Fplot supports plot configurations in json files.
 - [x] Derived plots, plots based on other plots, downsampling, average, derivation
 - [x] Ability to set fixed plot min/max limits
 - [x] Invividual plot Title
+- [ ] HTML color name check
 
 ## Suggestions
 
