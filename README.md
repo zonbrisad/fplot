@@ -45,7 +45,7 @@ Fplot is a program for quick and easy visualization of realtime data from files 
 
 ## Features
 
-- Realtime graphical plots of data from files in procfs and sysfs.
+- Realtime graphical plots of data from files in /proc and /sys.
 - Realtime plot of CPU load (--cpu)
 - Realtime plot of process cpu usage (--pid)
 - Average function
@@ -53,7 +53,7 @@ Fplot is a program for quick and easy visualization of realtime data from files 
 
 ## Requirements
 
-Python 3
+Python3
 PyQt6
 pyqtgraph
 
@@ -158,15 +158,16 @@ Fplot supports plot configurations in json files.
 
 ## ToDo
 
+- [ ] change to timestamps as x axis
+- [ ] HTML color name check
+- [ ] grid lines in plot
+- [ ] multiple plots in a single graph
 - [x] icon
 - [x] Colors
-- [ ] guide lines in graph
-- [ ] multiple plots in a single graph
 - [x] averaging
 - [ ] save/recover data
 - [ ] screenshot button
 - [ ] pause button
-- [ ] change to timestamps as x axis
 - [ ] arithmetics
 - [ ] counting
 - [ ] integrating
@@ -176,7 +177,7 @@ Fplot supports plot configurations in json files.
 - [x] Derived plots, plots based on other plots, downsampling, average, derivation
 - [x] Ability to set fixed plot min/max limits
 - [x] Invividual plot Title
-- [ ] HTML color name check
+- [ ] Ability to read from remote files via ssh
 
 ## Suggestions
 
@@ -186,6 +187,7 @@ Fplot supports plot configurations in json files.
 - [ ] Remove --plotpid and use --plot pid, --plot option will assume that a number is a pid
 - [ ] Individual timer for all plots
 - [ ] finding min/max
+- [ ] Ability to scroll large datasets
 
 ### Alternative plot parameter system
 
@@ -210,14 +212,23 @@ Each paramter value has a single letter prefix followed by a value. This means t
  M - Multiplier
  P - Datapoints
  F - Filter
+ H - hostname
+ U - username
  ymin - y axis minimum value
  ymax - y axis maximum value
  PC - plot color
 
-
- Alt. 
+ Alt.
 
  A - Average
  MA - Moving average
+
+ ### Remote reading via ssh
+  Using ssh to read values remotely would be a powerfull feature.
+  The link below shows how it could be done.
+  (https://stackoverflow.com/questions/10523642/is-there-scat-as-in-scp-etc-or-something-similar)
+  The function would require a local key setup to function.
+
+  --plots file:Hhostname:Uusername
 
 ## License

@@ -19,6 +19,7 @@ from argparse import (
     Action,
 )
 from copy import copy
+import time
 import json
 import logging
 import re
@@ -51,6 +52,8 @@ except ModuleNotFoundError:
 
 # Absolute path to script itself
 self_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+
+plot_args_list = []
 
 
 class App:
@@ -135,6 +138,7 @@ class PlotParam:
     ymin: int = None
     ymax: int = None
     plot_color: str = default_plot_color
+    grid: bool = False
 
     def __post_init__(self) -> None:
         logging.debug(f"PlotParam: {self.param_string}")
@@ -220,6 +224,10 @@ class PlotParam:
                     logging.debug(f"Y max: {self.ymax}")
                 except ValueError:
                     logging.error(f"Failed to convert {parameter[4:]} to float")
+            elif self.start_with(parameter, "GRID"):
+                self.grid = True
+                logging.debug(f"Grid: {self.grid}")
+
 
 
 # @dataclass
@@ -263,7 +271,8 @@ class SimplePlot:
             parent=parent,
             background="default",
             plotItem=None,
-            title=self.params.title
+            title=self.params.title,
+            axisItems={"bottom": pg.DateAxisItem()},
         )
 
         self.source = source
@@ -277,14 +286,19 @@ class SimplePlot:
             if self.params.ymin is not None and self.params.ymax is not None:
                 self.widget.setYRange(self.params.ymin, self.params.ymax)
 
-        self.x = list(range(self.params.datapoints))
+        #self.x = list(range(self.params.datapoints))
+        self.x = [time.time() - (self.params.datapoints - i) for i in range(self.params.datapoints)]
         self.y = [0 for _ in range(self.params.datapoints)]
 
         pen = pg.mkPen(color=self.params.plot_color, width=1)
         self.line = self.widget.plot(self.x, self.y, pen=pen)
 
+        if self.params.grid is True:
+            self.widget.showGrid(x=False, y=True)
+
         self.widget.getAxis("bottom").setPen(axis_pen)
         self.widget.getAxis("left").setPen(axis_pen)
+
         # self.getAxis("right").setPen(plot_pen)
         # self.getAxis("top").setPen(plot_pen)
 
@@ -306,7 +320,8 @@ class SimplePlot:
             return
 
         self.x = self.x[1:]
-        self.x.append(self.x[-1] + 1)
+        self.x.append(time.time())
+        # self.x.append(self.x[-1] + 1)
         self.y = self.y[1:]
         self.y.append(val)
         self.line.setData(self.x, self.y)
@@ -677,7 +692,7 @@ class FConf(PlotParam):
     """Parse JSON config file"""
 
     def __init__(
-        self, file_name: str, title: str = "", datapoints: int = 1000, columns: int = 1
+        self, file_name: str, title: str = "", datapoints: int = 1000, columns:int = 1
     ) -> None:
         super().__init__()
         self.file_name = file_name
@@ -722,12 +737,6 @@ class FConf(PlotParam):
         return default
 
 
-app = QtWidgets.QApplication(sys.argv)
-
-params_order = []
-plot_list = Plots()
-
-
 class CustomAction(Action):
     """Custom action for argparse"""
 
@@ -735,42 +744,9 @@ class CustomAction(Action):
         super().__init__(option_strings, dest, **kwargs)
 
     def __call__(self, parser, namespace, values, option_string=None):
-        params = PlotParam(
-            param_string=values,
-            datapoints=namespace.datapoints,
-            average=namespace.average
-        )
-
-        if self.dest == "plot":
-            plot_list.add_plot(SysPlot(params=params))
-
-        elif self.dest == "plotf":
-            plot_list.add_plot(FilePlot(params=params))
-
-        elif self.dest == "plotd":
-            try:
-                src_idx = params.file_name.count('.')
-                source = plot_list.plots[0 - src_idx]
-            except IndexError:
-                logging.error(f"Failed to get source plot for derived plot: {params.file_name}")
-                return
-
-            params = copy(source.params)
-            params.parse(values)
-            plot = DerivedPlot(params=params, source=source)
-            plot_list.add_plot(plot)
-
-        elif self.dest == "plotcpu":
-            params.title = "CPU (%)"
-            params.ymin = 0
-            params.ymax = 100
-            plot_list.add_plot(
-                CPUPlot(params=params)
-            )
-
         logging.debug(f"Dest: {self.dest} Values: {values}")
         dest = getattr(namespace, self.dest)
-        params_order.append(params)
+        plot_args_list.append((self.dest, values))
         setattr(namespace, self.dest, dest)
 
 
@@ -847,7 +823,7 @@ def main() -> None:
         "--plotd",
         action=CustomAction,
         default=[],
-        help="Add a plot.",
+        help="Add a derived plot.",
         metavar="",
     )
     parser.add_argument(
@@ -857,6 +833,12 @@ def main() -> None:
         type=int,
         help="Set number of columns",
         metavar="N",
+    )
+    parser.add_argument(
+        "--grid",
+        action="store_true",
+        default=False,
+        help="Show grid",
     )
     parser.add_argument(
         "--datapoints",
@@ -918,7 +900,9 @@ def main() -> None:
     else:
         logging.basicConfig(format=logging_format)
 
-    # app = QtWidgets.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
+
+    plot_list = Plots()
 
     # Handle plot setup files
     for config_file in args.conf:
@@ -1003,11 +987,48 @@ def main() -> None:
     #             params=params
     #         )
     #     )
+    
+    for plot_arg in plot_args_list:
+        dest, param_string = plot_arg
+        print(f"Plot args: {dest=} : {param_string=}")
+        params = PlotParam(
+            param_string=param_string,
+            datapoints=args.datapoints,
+            average=args.average,
+            grid=args.grid,
+        )
+
+        if dest == "plot":
+            plot_list.add_plot(SysPlot(params=params))
+
+        elif dest == "plotf":
+            plot_list.add_plot(FilePlot(params=params))
+
+        elif dest == "plotd":
+            try:
+                src_idx = params.file_name.count('.')
+                source = plot_list.plots[0 - src_idx]
+            except IndexError:
+                logging.error(f"Failed to get source plot for derived plot: {params.file_name}")
+                return
+
+            params = copy(source.params)
+            params.parse(param_string)
+            plot = DerivedPlot(params=params, source=source)
+            plot_list.add_plot(plot)
+
+        elif dest == "plotcpu":
+            params.title = "CPU (%)"
+            params.ymin = 0
+            params.ymax = 100
+            plot_list.add_plot(
+                CPUPlot(params=params)
+            )
 
     if args.colors:
         print_html_colors()
         return 0
-    
+
     if len(plot_list.plots) == 0:
         parser.print_help()
         return 1
