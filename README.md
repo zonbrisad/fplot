@@ -183,7 +183,7 @@ Fplot supports plot configurations in json files.
 
 - [ ] Support gpio
 - [ ] Remove --plotcpu and replace it with --plot cpu
-- [ ] Make a number of kernel data available as "files" via --plot 
+- [ ] Make a number of kernel data available as "files" via --plot
 - [ ] Remove --plotpid and use --plot pid, --plot option will assume that a number is a pid
 - [ ] Individual timer for all plots
 - [ ] finding min/max
