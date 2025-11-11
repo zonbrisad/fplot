@@ -2,10 +2,10 @@
     "title": "Memory",
     "columns": 1,
     "interval": 1000,
-    "datapoints": 1000,
+    "datapoints": 1800,
     "plots": [
         {
-            "file": "/proc/meminfo",
+            "source": "/proc/meminfo",
             "cmd": "",
             "row": "MemFree",
             "col": 2,
@@ -13,7 +13,7 @@
             "divider": 1024
         },
         {
-            "file": "/proc/meminfo",
+            "source": "/proc/meminfo",
             "cmd": "",
             "row": "MemAvailable",
             "col": 2,
@@ -21,7 +21,7 @@
             "divider": 1024
         },
         {
-            "file": "/proc/meminfo",
+            "source": "/proc/meminfo",
             "cmd": "",
             "row": "Cached",
             "col": 2,
@@ -29,7 +29,7 @@
             "divider": 1024
         },
         {
-            "file": "/proc/meminfo",
+            "source": "/proc/meminfo",
             "cmd": "",
             "row": "Buffers",
             "col": 2,
@@ -37,7 +37,7 @@
             "divider": 1024
         },
         {
-            "file": "/proc/meminfo",
+            "source": "/proc/meminfo",
             "cmd": "",
             "row": "Active",
             "col": 2,
@@ -45,7 +45,7 @@
             "divider": 1024
         },
         {
-            "file": "cpu",
+            "source": "cpu",
             "title": "CPU (%)"
         }
     ]

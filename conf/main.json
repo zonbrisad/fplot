@@ -1,0 +1,45 @@
+{
+    "title": "Main computer CPU Ryzen 3600",
+    "columns": 1,
+    "interval": 2000,
+    "datapoints": 1800,
+    "plots": [
+        {
+            "source": "/sys/class/hwmon/hwmon1/temp1_input",
+            "title": "CPU temp (°C)",
+            "divider": 1000,
+            "ymin": 30,
+            "ymax": 80,
+            "grid": true
+        },
+        {
+            "source": ".",
+            "title": "CPU temp (°C) A",
+            "divider": 1000,
+            "ymin": 30,
+            "ymax": 80,
+            "grid": true,
+            "average": 5,
+            "moving_average": false,
+            "color": "Green"
+        },
+        {
+            "source": "..",
+            "title": "CPU temp (°C) MA",
+            "divider": 1000,
+            "ymin": 30,
+            "ymax": 80,
+            "grid": true,
+            "average": 5,
+            "moving_average": true,
+            "color": "Blue"
+        },
+        {
+            "source": "cpu",
+            "grid": true,
+            "average": 5,
+            "moving_average": true,
+            "color": "Cyan"
+        }
+    ]
+}

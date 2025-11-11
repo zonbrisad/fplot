@@ -28,6 +28,18 @@
                 "--debug"
             ],
             "justMyCode": true
+        },
+        {
+            "name": "Python: fplot conf test",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "fplot",
+            "console": "integratedTerminal",
+            "args": [
+                "--conf=conf/main.json",
+                "--debug"
+            ],
+            "justMyCode": true
         }
     ]
 }
