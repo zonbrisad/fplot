@@ -47,6 +47,7 @@ class CustomTitleBar(QWidget):
         self.btn_close.clicked.connect(parent.close)
 
         for btn in (self.btn_minimize, self.btn_maximize, self.btn_close):
+            #btn.setStyleSheet(" QPushButton:hover { background: #555; }")
             btn.setStyleSheet("QPushButton { border: none; } QPushButton:hover { background: #555; }")
             layout.addWidget(btn)
 
@@ -77,6 +78,7 @@ class MainWindow(QMainWindow):
         # Add custom title bar
         self.title_bar = CustomTitleBar(self)
         main_layout.addWidget(self.title_bar)
+        
 
         # Content area
         content = QLabel("Your app content goes here.\n\nDrag the title bar to move the window.")

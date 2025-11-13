@@ -158,10 +158,10 @@ Fplot supports plot configurations in json files.
 
 ## ToDo
 
-- [ ] change to timestamps as x axis
+- [x] change to timestamps as x axis
 - [ ] HTML color name check
-- [ ] grid lines in plot
-- [ ] multiple plots in a single graph
+- [x] grid lines in plot
+- [ ] multiple plots in a single plotwidget
 - [x] icon
 - [x] Colors
 - [x] averaging
@@ -179,6 +179,7 @@ Fplot supports plot configurations in json files.
 - [x] Invividual plot Title
 - [ ] Ability to read from remote files via ssh
 
+
 ## Suggestions
 
 - [ ] Support gpio
@@ -189,7 +190,10 @@ Fplot supports plot configurations in json files.
 - [ ] finding min/max
 - [ ] Ability to scroll large datasets
 
-### Alternative plot parameter system
+## Known issues
+- Derived plot does not generate correct x axis timestamps
+
+## Alternative plot parameter system
 
 Current plot parameter system is position based.
 

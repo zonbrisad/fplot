@@ -145,6 +145,7 @@ class PlotParam:
     plot_color: str = default_plot_color
     grid: bool = False
     x_axis_time: bool = True
+    interval: int = 1000
 
     def __post_init__(self) -> None:
         logging.debug(f"PlotParam: {self.param_string}")
@@ -302,7 +303,14 @@ class SimplePlot:
                 self.widget.setYRange(self.params.ymin, self.params.ymax)
 
         if self.params.x_axis_time is True:
-            self.x = [time.time() - (self.params.datapoints - i) for i in range(self.params.datapoints)]
+            #self.params.average
+            if self.params.moving_average is True:
+                mul = self.params.interval
+            else:
+                mul = self.params.interval*self.params.average
+
+            self.x = [time.time() - (self.params.datapoints - i)*mul/1000 for i in range(self.params.datapoints)]
+            #self.x = [time.time() - (self.params.datapoints - i) for i in range(self.params.datapoints)]
         else:
             self.x = list(range(self.params.datapoints))
 
@@ -689,10 +697,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # button = QPushButton("Quit", self)
         # self.vbox.addWidget(button)
         # self.graphWidget.setBackground('w')
-        
-        test_button = QPushButton("Test", self)
-        frame_layout = QHBoxLayout(centralWidget)
-        frame_layout.addWidget(test_button)
 
         vboxes: list[QtWidgets.QHBoxLayout] = []
         for i in range(columns):
@@ -758,7 +762,8 @@ class FplotConfig():
                     average=self.get_param_conf(plotd, "average", 1),
                     moving_average=self.get_param_conf(plotd, "moving_average", False),
                     datapoints=self.get_param_conf(plotd, "datapoints", self.datapoints),
-                    plot_color=self.get_param_conf(plotd, "color", "Red")   
+                    plot_color=self.get_param_conf(plotd, "color", "Red"),
+                    interval=self.interval
                 )
             )
             #print(f"Params: {params}")
@@ -1054,9 +1059,20 @@ def main() -> None:
             datapoints=args.datapoints,
             average=args.average,
             grid=args.grid,
+            interval=args.interval
         )
 
         if dest == "plot":
+
+            if params.file_name.upper() == "CPU":
+                params.title = "CPU (%)"
+                params.ymin = 0
+                params.ymax = 100
+                plot_list.add_plot(
+                    CPUPlot(params=params)
+                )
+                continue
+
             plot_list.add_plot(SysPlot(params=params))
 
         elif dest == "plotf":
