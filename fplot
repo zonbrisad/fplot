@@ -50,6 +50,13 @@ except ModuleNotFoundError:
     print(">pip install pyqtgraph")
     exit(0)
 
+try:
+    import RPi.GPIO as GPIO
+except ImportError:
+    #print("RPi.GPIO not available, running in simulation mode.")
+    GPIO = False
+
+
 
 # Absolute path to script itself
 self_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
@@ -861,6 +868,14 @@ def main() -> None:
         default="x",
         help="Add plot for total CPU usage",
     )
+    if GPIO is not False:
+        parser.add_argument(
+            "--plotgpio",
+            action=CustomAction,
+            default="x",
+            help="Add plot for GPIO pin state (high/low) (only for Raspberry Pi)",
+            metavar="PIN",
+        )
     # parser.add_argument(
     #     "--plotcpui",
     #     action="store_true",
