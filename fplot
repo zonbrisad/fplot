@@ -1093,7 +1093,7 @@ def main() -> None:
 
     for plot_arg in plot_args_list:
         dest, param_string = plot_arg
-        print(f"Plot args: {dest=} : {param_string=}")
+        logging.debug(f"Plot args: {dest=} : {param_string=}")
         params = PlotParam(
             param_string=param_string,
             datapoints=args.datapoints,
