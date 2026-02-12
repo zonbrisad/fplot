@@ -675,6 +675,34 @@ class ProcessPlot(SimplePlot):
         return f"FilePlot {self.file_name} {self.row} {self.col}"
 
 
+class GPIOPlot(SimplePlot):
+    """Plot GPIO pin state (high/low)"""
+
+    def __init__(
+        self,
+        params: PlotParam,
+    ):
+        super().__init__(
+            params=params
+        )
+        self.pin = int(params.file_name)
+
+        if GPIO is False:
+            logging.error("RPi.GPIO not available, cannot create GPIOPlot")
+            return
+
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.pin, GPIO.IN)
+
+    def update(self) -> None:
+        """Update plot with new value"""
+
+        if GPIO is False:
+            return
+
+        val = GPIO.input(self.pin)
+        self.update_plot(val)
+
 class MainWindow(QtWidgets.QMainWindow):
     """Main window for fplot"""
 
