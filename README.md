@@ -173,21 +173,21 @@ Fplot supports plot configurations in json files.
 - [ ] integrating
 - [ ] Add: option to generate template config file
 - [ ] Add: Local directory for storage of userdefined config scripts ~/.config/fplot
-- [ ] Automatic detection of file type
 - [x] Derived plots, plots based on other plots, downsampling, average, derivation
 - [x] Ability to set fixed plot min/max limits
-- [x] Invividual plot Title
-- [ ] Ability to read from remote files via ssh
+- [x] Invividual plot Titles
 
 
 ## Suggestions
 
 - [ ] Support gpio
+- [ ] Ability to read from remote files via ssh
+- [ ] Automatic detection of file type
 - [ ] Remove --plotcpu and replace it with --plot cpu
 - [ ] Make a number of kernel data available as "files" via --plot
 - [ ] Remove --plotpid and use --plot pid, --plot option will assume that a number is a pid
 - [ ] Individual timer for all plots
-- [ ] finding min/max
+- [ ] finding and marking min/max
 - [ ] Ability to scroll large datasets
 
 ## Known issues

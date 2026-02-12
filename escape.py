@@ -524,6 +524,7 @@ class Ansi:
     FORWARD = "\x1b[C"  # Move cursor forward
     BACK = "\x1b[D"  # Move cursor backward
     RETURN = "\x1b[F"  # Move cursor to begining of line
+    HOME = "\x1b[1;1H"  # Move cursor to home position
     HIDE = "\x1b[?25l"  # Hide cursor
     SHOW = "\x1b[?25h"  # Show cursor
 

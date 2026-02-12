@@ -50,6 +50,13 @@ except ModuleNotFoundError:
     print(">pip install pyqtgraph")
     exit(0)
 
+try:
+    import RPi.GPIO as GPIO
+except ImportError:
+    #print("RPi.GPIO not available, running in simulation mode.")
+    GPIO = False
+
+
 
 # Absolute path to script itself
 self_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
@@ -668,6 +675,34 @@ class ProcessPlot(SimplePlot):
         return f"FilePlot {self.file_name} {self.row} {self.col}"
 
 
+class GPIOPlot(SimplePlot):
+    """Plot GPIO pin state (high/low)"""
+
+    def __init__(
+        self,
+        params: PlotParam,
+    ):
+        super().__init__(
+            params=params
+        )
+        self.pin = int(params.file_name)
+
+        if GPIO is False:
+            logging.error("RPi.GPIO not available, cannot create GPIOPlot")
+            return
+
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.pin, GPIO.IN)
+
+    def update(self) -> None:
+        """Update plot with new value"""
+
+        if GPIO is False:
+            return
+
+        val = GPIO.input(self.pin)
+        self.update_plot(val)
+
 class MainWindow(QtWidgets.QMainWindow):
     """Main window for fplot"""
 
@@ -861,6 +896,14 @@ def main() -> None:
         default="x",
         help="Add plot for total CPU usage",
     )
+    if GPIO is not False:
+        parser.add_argument(
+            "--plotgpio",
+            action=CustomAction,
+            default="x",
+            help="Add plot for GPIO pin state (high/low) (only for Raspberry Pi)",
+            metavar="PIN",
+        )
     # parser.add_argument(
     #     "--plotcpui",
     #     action="store_true",
