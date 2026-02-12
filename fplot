@@ -52,6 +52,8 @@ except ModuleNotFoundError:
 
 try:
     import RPi.GPIO as GPIO
+    from rpgpio import RpGpio #, rp_gpio_list
+    
 except ImportError:
     #print("RPi.GPIO not available, running in simulation mode.")
     GPIO = False
@@ -685,23 +687,23 @@ class GPIOPlot(SimplePlot):
         super().__init__(
             params=params
         )
-        self.pin = int(params.file_name)
-
-        if GPIO is False:
-            logging.error("RPi.GPIO not available, cannot create GPIOPlot")
-            return
-
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.pin, GPIO.IN)
+        
+        try:
+            pin = int(params.file_name.upper().replace("GPIO", ""))
+            self.gpio = RpGpio.find_gpio_by_id_p1(pin)
+        except ValueError:
+            logging.error(f"{params.file_name} is not a valid GPIO pin")
+            self.gpio = None
+                
+        self.gpio.setup(GPIO.IN, GPIO.PUD_UP)
 
     def update(self) -> None:
         """Update plot with new value"""
 
-        if GPIO is False:
+        if self.gpio is None:
             return
-
-        val = GPIO.input(self.pin)
-        self.update_plot(val)
+        
+        self.update_plot(self.gpio.input())
 
 class MainWindow(QtWidgets.QMainWindow):
     """Main window for fplot"""
@@ -861,7 +863,7 @@ Examples:\n
 
 def main() -> None:
     logging_format = "[%(levelname)s] %(lineno)d %(funcName)s() : %(message)s"
-    #logging.basicConfig(format=logging_format, level=logging.DEBUG)
+
     parser = ArgumentParser(
         prog=App.NAME,
         description=App.DESCRIPTION,
@@ -895,21 +897,16 @@ def main() -> None:
         action=CustomAction,
         default="x",
         help="Add plot for total CPU usage",
+        metavar="",
     )
     if GPIO is not False:
         parser.add_argument(
             "--plotgpio",
             action=CustomAction,
             default="x",
-            help="Add plot for GPIO pin state (high/low) (only for Raspberry Pi)",
+            help="Add plot for GPIO pin (Raspberry Pi only, experimental)",
             metavar="PIN",
         )
-    # parser.add_argument(
-    #     "--plotcpui",
-    #     action="store_true",
-    #     default=[],
-    #     help="Add CPU usage plot, all individual cores",
-    # )
     parser.add_argument(
         "--plotd",
         action=CustomAction,
@@ -1141,6 +1138,14 @@ def main() -> None:
             params.ymax = 100
             plot_list.add_plot(
                 CPUPlot(params=params)
+            )
+            
+        elif dest == "plotgpio":
+            params.title = f"GPIO{params.file_name}"
+            params.ymin = 0 
+            params.ymax = 1
+            plot_list.add_plot(
+                GPIOPlot(params=params)
             )
 
     if args.colors:

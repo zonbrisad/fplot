@@ -1,19 +1,51 @@
-"""
-rpgpio.py - A collection of classes and functions for handling Raspberry Pi GPIO pins.
-
-Author: Peter Malmberg
-Date: 2026-02-12
-License: MIT
-"""
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# rpgpio.py - A collection of classes and functions for handling Raspberry Pi GPIO pins.
+# 
+# Author: Peter Malmberg
+# Date: 2026-02-12
+# License: MIT
+#
 
 import logging
 from dataclasses import dataclass
+from typing import Any
 
 try:
     import RPi.GPIO as GPIO
 except ImportError:
     print("RPi.GPIO not available")
     exit(1)
+   
+rp_gpios = [
+    (3, 2, "SDA"),
+    (5, 3, "SCL"),
+    (7, 3, "GPCLK"),
+    (8, 14, "TXD"),
+    (10, 15, "RXD"),
+    (11, 17, ""),
+    (12, 18, "PCM_CLK"),
+    (13, 27, ""),
+    (15, 22, ""),
+    (16, 23, ""),
+    (18, 24, ""),
+    (19, 10, "SPI_MOSI"),
+    (21, 9, "SPI_MISO"),
+    (22, 25, ""),
+    (23, 11, "SPI_SCLK"),
+    (24, 8, "SPI_CE0"),
+    (26, 7, "SPI_CE1"),
+    (29, 5, ""),
+    (31, 6, ""),
+    (32, 12, ""),
+    (33, 13, ""),
+    (35, 19, ""),
+    (36, 16, ""),
+    (37, 26, ""),
+    (38, 20, ""),
+    (40, 21, ""),
+]
     
 @dataclass
 class RpGpio:
@@ -83,38 +115,46 @@ class RpGpio:
     def pwm_change_duty_cycle(self, duty_cycle:float) -> None:
         if self.pwm is not None:
             self.pwm.ChangeDutyCycle(duty_cycle)
+            
+            
+    @staticmethod
+    def find_gpio_by_id_p1(id_p1:int):
+        for (p, g, a) in rp_gpios:
+            if g == id_p1:
+                return RpGpio(p, g, a)
+        raise ValueError(f"GPIO with id_p1={id_p1} not found")
         
         
     
 
-rp_gpio_list = [
-    RpGpio(3, 2, "SDA"),
-    RpGpio(5, 3, "SCL"),
-    RpGpio(7, 3, "GPCLK"),
-    RpGpio(8, 14, "TXD"),
-    RpGpio(10, 15, "RXD"),
-    RpGpio(11, 17, ""),
-    RpGpio(12, 18, "PCM_CLK"),
-    RpGpio(13, 27, ""),
-    RpGpio(15, 22, ""),
-    RpGpio(16, 23, ""),
-    RpGpio(18, 24, ""),
-    RpGpio(19, 10, "SPI_MOSI"),
-    RpGpio(21, 9, "SPI_MISO"),
-    RpGpio(22, 25, ""),
-    RpGpio(23, 11, "SPI_SCLK"),
-    RpGpio(24, 8, "SPI_CE0"),
-    RpGpio(26, 7, "SPI_CE1"),
-    RpGpio(29, 5, ""),
-    RpGpio(31, 6, ""),
-    RpGpio(32, 12, ""),
-    RpGpio(33, 13, ""),
-    RpGpio(35, 19, ""),
-    RpGpio(36, 16, ""),
-    RpGpio(37, 26, ""),
-    RpGpio(38, 20, ""),
-    RpGpio(40, 21, ""),
-]
+# rp_gpio_list = [
+#     RpGpio(3, 2, "SDA"),
+#     RpGpio(5, 3, "SCL"),
+#     RpGpio(7, 3, "GPCLK"),
+#     RpGpio(8, 14, "TXD"),
+#     RpGpio(10, 15, "RXD"),
+#     RpGpio(11, 17, ""),
+#     RpGpio(12, 18, "PCM_CLK"),
+#     RpGpio(13, 27, ""),
+#     RpGpio(15, 22, ""),
+#     RpGpio(16, 23, ""),
+#     RpGpio(18, 24, ""),
+#     RpGpio(19, 10, "SPI_MOSI"),
+#     RpGpio(21, 9, "SPI_MISO"),
+#     RpGpio(22, 25, ""),
+#     RpGpio(23, 11, "SPI_SCLK"),
+#     RpGpio(24, 8, "SPI_CE0"),
+#     RpGpio(26, 7, "SPI_CE1"),
+#     RpGpio(29, 5, ""),
+#     RpGpio(31, 6, ""),
+#     RpGpio(32, 12, ""),
+#     RpGpio(33, 13, ""),
+#     RpGpio(35, 19, ""),
+#     RpGpio(36, 16, ""),
+#     RpGpio(37, 26, ""),
+#     RpGpio(38, 20, ""),
+#     RpGpio(40, 21, ""),
+# ]
 
 
 GPIO.setmode(GPIO.BCM)
